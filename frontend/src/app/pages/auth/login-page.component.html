@@ -1,0 +1,44 @@
+﻿<section class="auth-shell">
+  <div class="auth-hero">
+    <div class="hero-brand">
+      <img src="/logo.svg" alt="WesselTrack" />
+      <p class="eyebrow">WesselTrack</p>
+    </div>
+    <h1>Controle financeiro claro, seguro e organizado.</h1>
+    <p class="description">
+      Autenticação protegida com senha criptografada, rotas seguras e isolamento total dos dados por usuário.
+    </p>
+    <ul>
+      <li>Receitas mensais com datas previstas</li>
+      <li>Despesas fixas, variáveis e parceladas</li>
+      <li>Controle por categoria, cartão e débito</li>
+    </ul>
+  </div>
+
+  <div class="auth-card">
+    <div class="brand-lockup">
+      <img src="/logo.svg" alt="WesselTrack" />
+      <div>
+        <span>WesselTrack</span>
+        <small>Acesso à plataforma</small>
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="error-banner">{{ errorMessage() }}</p>
+    }
+
+    <form [formGroup]="loginForm" (ngSubmit)="submitLogin()">
+      <label>
+        Usuário
+        <input type="text" formControlName="username" autocomplete="username" placeholder="Seu usuário" />
+      </label>
+      <label>
+        Senha
+        <input type="password" formControlName="password" autocomplete="current-password" placeholder="Sua senha" />
+      </label>
+      <button type="submit" [disabled]="loading()">{{ loading() ? 'Entrando...' : 'Entrar no WesselTrack' }}</button>
+      <p class="helper-text">O cadastro de novos usuários é feito internamente por um administrador.</p>
+    </form>
+  </div>
+</section>

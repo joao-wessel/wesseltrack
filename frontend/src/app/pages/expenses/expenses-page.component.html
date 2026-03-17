@@ -1,0 +1,113 @@
+﻿<section class="form-page">
+  <div class="page-header">
+    <div>
+      <h2>Cadastro de despesas</h2>
+      <p>Variáveis afetam apenas o mês atual. Fixas podem ser recorrentes. Parceladas entram nos meses correspondentes.</p>
+    </div>
+    <label class="month-filter">
+      <span>Mês</span>
+      <input type="month" [value]="month()" (input)="changeMonth($any($event.target).value)" />
+    </label>
+  </div>
+
+  <div class="split">
+    <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
+      <h3>{{ editingId() ? 'Editar despesa' : 'Nova despesa' }}</h3>
+      <label>
+        <span>Descrição</span>
+        <input type="text" formControlName="description" placeholder="Ex.: Mercado do mês" />
+        @if (form.controls.description.touched && form.controls.description.invalid) { <small class="error">Informe a descrição.</small> }
+      </label>
+
+      <div class="two-columns">
+        <label>
+          <span>Categoria</span>
+          <select formControlName="categoryId">
+            <option [ngValue]="null">Selecione uma categoria</option>
+            @for (category of categories(); track category.id) {
+              <option [ngValue]="category.id">{{ category.name }}</option>
+            }
+          </select>
+          @if (form.controls.categoryId.touched && form.controls.categoryId.invalid) { <small class="error">Selecione uma categoria.</small> }
+        </label>
+
+        <label>
+          <span>Tipo</span>
+          <select formControlName="type">
+            <option value="VARIABLE">Variável</option>
+            <option value="FIXED">Fixa</option>
+            <option value="INSTALLMENT">Parcelada</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="two-columns">
+        <label>
+          <span>Forma de pagamento</span>
+          <select formControlName="paymentMethod">
+            <option value="DEBIT">Débito</option>
+            <option value="CREDIT">Crédito</option>
+            <option value="PIX">PIX</option>
+            <option value="CASH">Dinheiro</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Origem do pagamento</span>
+          <input type="text" formControlName="paymentSource" placeholder="Ex.: Cartão Nubank" />
+          @if (form.controls.paymentSource.touched && form.controls.paymentSource.invalid) { <small class="error">Informe a origem do pagamento.</small> }
+        </label>
+      </div>
+
+      <div class="two-columns">
+        <label>
+          <span>Valor</span>
+          <input type="number" formControlName="amount" step="0.01" placeholder="Ex.: 240,90" />
+          @if (form.controls.amount.touched && form.controls.amount.invalid) { <small class="error">Informe um valor maior que zero.</small> }
+        </label>
+
+        <label>
+          <span>Data</span>
+          <input type="date" formControlName="dueDate" />
+          @if (form.controls.dueDate.touched && form.controls.dueDate.invalid) { <small class="error">Selecione a data.</small> }
+        </label>
+      </div>
+
+      @if (isFixed()) {
+        <label class="check-row">
+          <input type="checkbox" formControlName="recurring" />
+          <span>Levar esta despesa fixa automaticamente para o próximo mês no fechamento mensal</span>
+        </label>
+      }
+
+      @if (isInstallment()) {
+        <label>
+          <span>Quantidade de parcelas</span>
+          <input type="number" formControlName="installmentCount" placeholder="Ex.: 10" />
+          @if (form.controls.installmentCount.touched && form.controls.installmentCount.invalid) { <small class="error">Informe entre 1 e 60 parcelas.</small> }
+        </label>
+      }
+
+      <div class="actions">
+        <button type="submit">Salvar despesa</button>
+        @if (editingId()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }
+      </div>
+    </form>
+
+    <article class="panel list">
+      @for (expense of expenses(); track expense.id) {
+        <div class="row">
+          <div>
+            <strong>{{ expense.description }}</strong>
+            <small>{{ expense.category }} · {{ expense.paymentSource }} · {{ expense.dueDate | date:'dd/MM/yyyy' }}</small>
+          </div>
+          <div class="actions compact">
+            <strong>{{ expense.amount | currency:'BRL':'symbol':'1.2-2' }}</strong>
+            <button type="button" class="ghost small" (click)="edit(expense)">Editar</button>
+            <button type="button" class="ghost small danger" (click)="remove(expense)">Excluir</button>
+          </div>
+        </div>
+      }
+    </article>
+  </div>
+</section>

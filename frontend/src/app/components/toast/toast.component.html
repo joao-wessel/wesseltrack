@@ -1,0 +1,8 @@
+﻿<div class="toast-stack">
+  @for (message of toastService.messages(); track message.id) {
+    <div class="toast" [class.error]="message.type === 'error'" [class.success]="message.type === 'success'">
+      <span>{{ message.text }}</span>
+      <button type="button" (click)="toastService.remove(message.id)">×</button>
+    </div>
+  }
+</div>

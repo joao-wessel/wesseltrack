@@ -1,0 +1,43 @@
+﻿<section class="admin-grid">
+  <div class="page-header">
+    <h2>Usuários</h2>
+    <p>Apenas administradores podem cadastrar novos acessos ao WesselTrack.</p>
+  </div>
+
+  <div class="split">
+    <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
+      <label>
+        <span>Nome</span>
+        <input type="text" formControlName="name" placeholder="Ex.: Maria da Silva" />
+      </label>
+      <label>
+        <span>Usuário</span>
+        <input type="text" formControlName="username" placeholder="Ex.: maria.silva" />
+      </label>
+      <label>
+        <span>Senha</span>
+        <input type="password" formControlName="password" placeholder="Senha forte" />
+      </label>
+      <label>
+        <span>Perfil</span>
+        <select formControlName="role">
+          <option value="USER">Usuário</option>
+          <option value="ADMIN">Administrador</option>
+        </select>
+      </label>
+      <button type="submit">Criar usuário</button>
+    </form>
+
+    <article class="panel list">
+      @for (user of users(); track user.id) {
+        <div class="row">
+          <div>
+            <strong>{{ user.name }}</strong>
+            <small>{{ user.username }}</small>
+          </div>
+          <span class="pill">{{ user.role }}</span>
+        </div>
+      }
+    </article>
+  </div>
+</section>

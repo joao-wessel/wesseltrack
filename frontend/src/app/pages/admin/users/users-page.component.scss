@@ -1,0 +1,12 @@
+﻿.admin-grid, .form-grid, .list { display: grid; gap: 1rem; }
+.split { display: grid; grid-template-columns: 380px 1fr; gap: 1rem; }
+.page-header h2, .page-header p { margin: 0; }
+.page-header p, small { color: #64748b; }
+.panel { background: rgba(255,255,255,.9); border-radius: 1.5rem; padding: 1.4rem; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 24px 70px rgba(15,23,42,.08); }
+label { display: grid; gap: 0.45rem; font-weight: 700; color: #334155; }
+input, select, button { height: 3rem; border-radius: 0.95rem; font: inherit; }
+input, select { border: 1px solid #cbd5e1; padding: 0 1rem; background: #fff; }
+button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weight: 700; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; background: #f8fafc; border-radius: 1rem; padding: 0.9rem 1rem; }
+.pill { padding: 0.55rem 0.85rem; border-radius: 999px; background: rgba(15,118,110,.12); color: #0f766e; font-weight: 700; }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; } }

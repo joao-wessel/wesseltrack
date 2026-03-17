@@ -1,0 +1,36 @@
+﻿<section class="admin-grid">
+  <div class="page-header">
+    <h2>Categorias</h2>
+    <p>Criação e manutenção das categorias disponíveis para todos os usuários.</p>
+  </div>
+
+  <div class="split">
+    <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
+      <h3>{{ editingId() ? 'Editar categoria' : 'Nova categoria' }}</h3>
+      <label>
+        <span>Nome</span>
+        <input type="text" formControlName="name" placeholder="Ex.: Moradia" />
+      </label>
+      <label>
+        <span>Cor</span>
+        <input type="color" formControlName="color" />
+      </label>
+      <div class="actions">
+        <button type="submit">Salvar</button>
+        @if (editingId()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }
+      </div>
+    </form>
+
+    <article class="panel list">
+      @for (category of categories(); track category.id) {
+        <div class="row">
+          <span><i [style.background]="category.color"></i>{{ category.name }}</span>
+          <div class="actions">
+            <button type="button" class="ghost small" (click)="edit(category)">Editar</button>
+            <button type="button" class="ghost small danger" (click)="remove(category)">Excluir</button>
+          </div>
+        </div>
+      }
+    </article>
+  </div>
+</section>

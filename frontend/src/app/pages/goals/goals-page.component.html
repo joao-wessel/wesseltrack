@@ -1,0 +1,22 @@
+﻿<section class="form-page">
+  <div class="page-header">
+    <h2>Meta mensal</h2>
+    <p>Defina quanto deve ser reservado por mês. Esse valor entra no cálculo do saldo disponível.</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
+    <label>
+      <span>Mês de referência</span>
+      <input type="month" formControlName="month" />
+      @if (form.controls.month.touched && form.controls.month.invalid) { <small class="error">Selecione o mês.</small> }
+    </label>
+
+    <label>
+      <span>Valor da meta</span>
+      <input type="number" formControlName="amount" step="0.01" placeholder="Ex.: 1000,00" />
+      @if (form.controls.amount.touched && form.controls.amount.invalid) { <small class="error">Informe um valor válido.</small> }
+    </label>
+
+    <button type="submit">Salvar meta</button>
+  </form>
+</section>

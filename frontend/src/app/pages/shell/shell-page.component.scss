@@ -1,0 +1,114 @@
+﻿:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  background:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.10), transparent 28%),
+    linear-gradient(180deg, #f8fafc, #eef2ff 42%, #f8fafc);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-right: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(14px);
+}
+
+.brand {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.brand img {
+  width: 2.9rem;
+  height: 2.9rem;
+}
+
+.brand strong {
+  display: block;
+  font-size: 1.1rem;
+}
+
+.brand small,
+.eyebrow {
+  color: #64748b;
+}
+
+nav {
+  display: grid;
+  gap: 0.5rem;
+}
+
+nav a,
+button {
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  text-decoration: none;
+  font-weight: 700;
+  color: #334155;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+}
+
+nav a.active {
+  background: #0f172a;
+  color: #fff;
+}
+
+button.ghost {
+  border-color: #cbd5e1;
+}
+
+.content {
+  padding: 1.5rem;
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.content-header h1,
+.content-header p {
+  margin: 0;
+}
+
+.eyebrow {
+  text-transform: capitalize;
+  letter-spacing: 0.16em;
+  font-size: 0.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.role-pill {
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.12);
+  color: #0f766e;
+  font-weight: 700;
+}
+
+@media (max-width: 980px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  }
+}

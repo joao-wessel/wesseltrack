@@ -1,0 +1,62 @@
+﻿<section class="form-page">
+  <div class="page-header">
+    <div>
+      <h2>Cadastro de receitas</h2>
+      <p>Lance salários, entradas extras e recebimentos previstos do mês.</p>
+    </div>
+    <label class="month-filter">
+      <span>Mês</span>
+      <input type="month" [value]="month()" (input)="changeMonth($any($event.target).value)" />
+    </label>
+  </div>
+
+  <div class="split">
+    <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
+      <h3>{{ editingId() ? 'Editar receita' : 'Nova receita' }}</h3>
+      <label>
+        <span>Descrição</span>
+        <input type="text" formControlName="description" placeholder="Ex.: Salário principal" />
+        @if (form.controls.description.touched && form.controls.description.invalid) { <small class="error">Informe a descrição.</small> }
+      </label>
+
+      <label>
+        <span>Valor</span>
+        <input type="number" formControlName="amount" step="0.01" placeholder="Ex.: 3500,00" />
+        @if (form.controls.amount.touched && form.controls.amount.invalid) { <small class="error">Informe um valor maior que zero.</small> }
+      </label>
+
+      <label>
+        <span>Data de recebimento</span>
+        <input type="date" formControlName="receiveDate" />
+        @if (form.controls.receiveDate.touched && form.controls.receiveDate.invalid) { <small class="error">Selecione a data.</small> }
+      </label>
+
+      <label>
+        <span>Dia esperado</span>
+        <input type="number" formControlName="expectedDay" placeholder="Ex.: 5" />
+        @if (form.controls.expectedDay.touched && form.controls.expectedDay.invalid) { <small class="error">Informe um dia entre 1 e 31.</small> }
+      </label>
+
+      <div class="actions">
+        <button type="submit">Salvar receita</button>
+        @if (editingId()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }
+      </div>
+    </form>
+
+    <article class="panel list">
+      @for (income of incomes(); track income.id) {
+        <div class="row">
+          <div>
+            <strong>{{ income.description }}</strong>
+            <small>{{ income.receiveDate | date:'dd/MM/yyyy' }} · dia esperado {{ income.expectedDay }}</small>
+          </div>
+          <div class="actions compact">
+            <strong>{{ income.amount | currency:'BRL':'symbol':'1.2-2' }}</strong>
+            <button type="button" class="ghost small" (click)="edit(income)">Editar</button>
+            <button type="button" class="ghost small danger" (click)="remove(income)">Excluir</button>
+          </div>
+        </div>
+      }
+    </article>
+  </div>
+</section>
