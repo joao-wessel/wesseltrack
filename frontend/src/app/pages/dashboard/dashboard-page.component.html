@@ -1,4 +1,4 @@
-﻿<section class="page-grid" *ngIf="dashboard() as data">
+<section class="page-grid" *ngIf="dashboard() as data">
   <div class="page-header">
     <div>
       <h2>Painel financeiro</h2>
@@ -6,7 +6,7 @@
     </div>
     <div class="header-actions">
       <button type="button" class="ghost" (click)="changeMonth(-1)">Mês anterior</button>
-      <span class="month-pill">{{ activeMonth() }}</span>
+      <span class="month-pill">{{ activeMonthLabel() }}</span>
       <button type="button" class="ghost" (click)="changeMonth(1)">Próximo mês</button>
       <button type="button" (click)="closeMonth()">Fechar mês</button>
     </div>
@@ -16,7 +16,11 @@
     <app-summary-card label="Receitas" [value]="data.totalIncome" hint="Entradas previstas no mês" />
     <app-summary-card label="Despesas" [value]="data.totalExpenses" hint="Fixas, variáveis e parceladas" />
     <app-summary-card label="Meta" [value]="data.goalAmount" hint="Reserva mensal planejada" />
-    <app-summary-card label="Saldo" [value]="totalAvailable()" hint="Receitas - despesas - meta" />
+    <app-summary-card
+      label="Limite no crédito"
+      [value]="data.creditUsage.remaining"
+      [hint]="'Gasto ' + (data.creditUsage.spent | currency:'BRL':'symbol':'1.2-2') + ' de ' + (data.creditUsage.limitAmount | currency:'BRL':'symbol':'1.2-2')"
+    />
   </section>
 
   <section class="content-grid">
@@ -37,14 +41,17 @@
 
     <article class="panel">
       <div class="panel-header">
-        <h3>Origem de pagamento</h3>
-        <p>Uso por conta, cartão ou carteira.</p>
+        <h3>Gastos por forma de pagamento</h3>
+        <p>Total gasto, limite configurado e saldo restante por método.</p>
       </div>
       <div class="list">
-        @for (item of data.byPaymentSource; track item.source) {
+        @for (item of data.byPaymentMethod; track item.method) {
           <div class="row">
-            <span>{{ item.source }}</span>
-            <strong>{{ item.total | currency:'BRL':'symbol':'1.2-2' }}</strong>
+            <div>
+              <strong>{{ item.method }}</strong>
+              <small>Gasto {{ item.spent | currency:'BRL':'symbol':'1.2-2' }} de {{ item.limitAmount | currency:'BRL':'symbol':'1.2-2' }}</small>
+            </div>
+            <strong [class.over-limit]="item.remaining < 0">{{ item.remaining | currency:'BRL':'symbol':'1.2-2' }}</strong>
           </div>
         }
       </div>
@@ -60,7 +67,7 @@
           <div class="table-row">
             <div>
               <strong>{{ expense.description }}</strong>
-              <small>{{ expense.category }} · {{ expense.paymentSource }}</small>
+              <small>{{ expense.category }} · {{ paymentMethodLabel(expense.paymentMethod) }}</small>
             </div>
             <div>
               <span>{{ expense.type === 'INSTALLMENT' ? expense.installmentNumber + '/' + expense.installmentCount : expense.type }}</span>

@@ -1,11 +1,11 @@
-﻿.page-grid, .content-grid, .summary-grid, .list, .table-like { display: grid; gap: 1rem; }
+.page-grid, .content-grid, .summary-grid, .list, .table-like { display: grid; gap: 1rem; }
 .page-header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 1rem; }
 .page-header h2, .page-header p { margin: 0; }
 .header-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
 .month-pill, .ghost, button { border-radius: 999px; padding: 0.85rem 1rem; }
 button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weight: 700; }
 .ghost { border: 1px solid #cbd5e1; background: #fff; color: #0f172a; }
-.month-pill { background: rgba(15, 118, 110, 0.12); color: #0f766e; font-weight: 700; }
+.month-pill { background: rgba(15, 118, 110, 0.12); color: #0f766e; font-weight: 700; text-transform: capitalize; }
 .summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .content-grid { grid-template-columns: 1fr 1fr; }
 .panel { background: rgba(255,255,255,0.9); border-radius: 1.5rem; padding: 1.3rem; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 24px 70px rgba(15,23,42,.08); }
@@ -16,6 +16,7 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
 .table-row { grid-template-columns: 1.4fr 0.8fr auto; }
 .label { display: inline-flex; align-items: center; gap: 0.5rem; }
 .label i { width: .8rem; height: .8rem; border-radius: 999px; display: inline-block; }
+.over-limit { color: #b91c1c; }
 .wide { grid-column: 1 / -1; }
 @media (max-width: 1100px) { .summary-grid, .content-grid { grid-template-columns: 1fr; } }
-@media (max-width: 720px) { .page-header, .header-actions, .table-row { grid-template-columns: 1fr; display: grid; } }
+@media (max-width: 720px) { .page-header, .header-actions, .table-row, .row { grid-template-columns: 1fr; display: grid; } }

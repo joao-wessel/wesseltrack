@@ -1,22 +1,46 @@
-﻿<section class="form-page">
+<section class="form-page">
   <div class="page-header">
-    <h2>Meta mensal</h2>
-    <p>Defina quanto deve ser reservado por mês. Esse valor entra no cálculo do saldo disponível.</p>
+    <h2>Meta e limites do mês</h2>
+    <p>Defina a reserva mensal e os tetos de gasto por forma de pagamento para acompanhar o quanto ainda pode gastar.</p>
   </div>
 
   <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
     <label>
       <span>Mês de referência</span>
-      <input type="month" formControlName="month" />
+      <input type="month" lang="pt-BR" formControlName="month" (input)="changeMonth($any($event.target).value)" />
       @if (form.controls.month.touched && form.controls.month.invalid) { <small class="error">Selecione o mês.</small> }
     </label>
 
     <label>
       <span>Valor da meta</span>
-      <input type="number" formControlName="amount" step="0.01" placeholder="Ex.: 1000,00" />
-      @if (form.controls.amount.touched && form.controls.amount.invalid) { <small class="error">Informe um valor válido.</small> }
+      <input type="number" formControlName="goalAmount" step="0.01" placeholder="Ex.: 1000,00" />
+      @if (form.controls.goalAmount.touched && form.controls.goalAmount.invalid) { <small class="error">Informe um valor válido.</small> }
     </label>
 
-    <button type="submit">Salvar meta</button>
+    <div class="two-columns">
+      <label>
+        <span>Limite no crédito</span>
+        <input type="number" formControlName="creditLimit" step="0.01" placeholder="Ex.: 2500,00" />
+      </label>
+
+      <label>
+        <span>Limite no débito</span>
+        <input type="number" formControlName="debitLimit" step="0.01" placeholder="Ex.: 1800,00" />
+      </label>
+    </div>
+
+    <div class="two-columns">
+      <label>
+        <span>Limite no PIX</span>
+        <input type="number" formControlName="pixLimit" step="0.01" placeholder="Ex.: 900,00" />
+      </label>
+
+      <label>
+        <span>Limite em dinheiro</span>
+        <input type="number" formControlName="cashLimit" step="0.01" placeholder="Ex.: 500,00" />
+      </label>
+    </div>
+
+    <button type="submit">Salvar planejamento</button>
   </form>
 </section>

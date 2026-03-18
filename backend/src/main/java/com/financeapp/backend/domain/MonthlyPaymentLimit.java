@@ -4,16 +4,16 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.YearMonth;
 
 @Entity
-@Table(name = "income")
+@Table(name = "monthly_payment_limit", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "monthKey", "paymentMethod"}))
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Income {
+public class MonthlyPaymentLimit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,12 +23,14 @@ public class Income {
     @JoinColumn(name = "user_id")
     private AppUser user;
 
-    @Column(nullable = false, length = 120)
-    private String description;
+    @Convert(converter = YearMonthAttributeConverter.class)
+    @Column(nullable = false, length = 7)
+    private YearMonth monthKey;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private PaymentMethod paymentMethod;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
-
-    @Column(nullable = false)
-    private LocalDate receiveDate;
 }

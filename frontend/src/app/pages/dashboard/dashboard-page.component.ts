@@ -1,8 +1,8 @@
-﻿import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { SummaryCardComponent } from '../../components/summary-card/summary-card.component';
 import { FinanceService } from '../../core/finance.service';
-import { DashboardSummary } from '../../core/models';
+import { DashboardSummary, PaymentMethod } from '../../core/models';
 import { ToastService } from '../../core/toast.service';
 
 @Component({
@@ -18,6 +18,10 @@ export class DashboardPageComponent {
   readonly activeMonth = signal(this.toYearMonth(new Date()));
   readonly dashboard = signal<DashboardSummary | null>(null);
   readonly totalAvailable = computed(() => this.dashboard()?.netBalance ?? 0);
+  readonly activeMonthLabel = computed(() => {
+    const [year, month] = this.activeMonth().split('-').map(Number);
+    return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(new Date(year, month - 1, 1));
+  });
 
   constructor() {
     this.load();
@@ -49,5 +53,18 @@ export class DashboardPageComponent {
 
   private toYearMonth(date: Date): string {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  paymentMethodLabel(method: PaymentMethod): string {
+    switch (method) {
+      case 'CREDIT':
+        return 'Crédito';
+      case 'DEBIT':
+        return 'Débito';
+      case 'PIX':
+        return 'PIX';
+      case 'CASH':
+        return 'Dinheiro';
+    }
   }
 }

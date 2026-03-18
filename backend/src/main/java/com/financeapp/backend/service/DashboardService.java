@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,18 +23,11 @@ public class DashboardService {
     public DashboardSummaryResponse getMonthlySummary(YearMonth month) {
         var incomes = incomeService.list(month);
         var expenses = expenseService.list(month);
-        BigDecimal goal = goalService.getGoal(month);
+        var planning = goalService.getPlanning(month);
+        BigDecimal goal = planning.goalAmount();
 
         BigDecimal totalIncome = incomes.stream().map(i -> i.amount()).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalExpenses = expenses.stream().map(e -> e.amount()).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal debitExpenses = expenses.stream()
-                .filter(e -> e.paymentMethod() == PaymentMethod.DEBIT || e.paymentMethod() == PaymentMethod.PIX || e.paymentMethod() == PaymentMethod.CASH)
-                .map(e -> e.amount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal creditExpenses = expenses.stream()
-                .filter(e -> e.paymentMethod() == PaymentMethod.CREDIT)
-                .map(e -> e.amount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Map<String, DashboardSummaryResponse.CategoryTotal> categoryTotals = new LinkedHashMap<>();
         for (var expense : expenses) {
@@ -43,10 +37,31 @@ public class DashboardService {
             });
         }
 
-        Map<String, BigDecimal> paymentSourceMap = new LinkedHashMap<>();
-        for (var expense : expenses) {
-            paymentSourceMap.merge(expense.paymentSource(), expense.amount(), BigDecimal::add);
+        Map<PaymentMethod, BigDecimal> paymentMethodTotals = new LinkedHashMap<>();
+        for (PaymentMethod method : Arrays.asList(PaymentMethod.CREDIT, PaymentMethod.DEBIT, PaymentMethod.PIX, PaymentMethod.CASH)) {
+            paymentMethodTotals.put(method, BigDecimal.ZERO);
         }
+        for (var expense : expenses) {
+            paymentMethodTotals.merge(expense.paymentMethod(), expense.amount(), BigDecimal::add);
+        }
+
+        List<DashboardSummaryResponse.PaymentMethodUsage> usages = paymentMethodTotals.entrySet().stream()
+                .map(entry -> {
+                    BigDecimal limit = planning.limitFor(entry.getKey());
+                    BigDecimal spent = entry.getValue();
+                    return new DashboardSummaryResponse.PaymentMethodUsage(
+                            labelFor(entry.getKey()),
+                            spent,
+                            limit,
+                            limit.subtract(spent)
+                    );
+                })
+                .toList();
+
+        DashboardSummaryResponse.PaymentMethodUsage creditUsage = usages.stream()
+                .filter(item -> item.method().equals(labelFor(PaymentMethod.CREDIT)))
+                .findFirst()
+                .orElse(new DashboardSummaryResponse.PaymentMethodUsage(labelFor(PaymentMethod.CREDIT), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
 
         return new DashboardSummaryResponse(
                 month.toString(),
@@ -54,12 +69,20 @@ public class DashboardService {
                 totalExpenses,
                 goal,
                 totalIncome.subtract(totalExpenses).subtract(goal),
-                debitExpenses,
-                creditExpenses,
+                creditUsage,
                 List.copyOf(categoryTotals.values()),
-                paymentSourceMap.entrySet().stream().map(e -> new DashboardSummaryResponse.PaymentSourceTotal(e.getKey(), e.getValue())).toList(),
+                usages,
                 incomes,
                 expenses
         );
+    }
+
+    private String labelFor(PaymentMethod method) {
+        return switch (method) {
+            case CREDIT -> "Crédito";
+            case DEBIT -> "Débito";
+            case PIX -> "PIX";
+            case CASH -> "Dinheiro";
+        };
     }
 }

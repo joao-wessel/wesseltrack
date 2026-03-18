@@ -22,13 +22,20 @@
     </form>
 
     <article class="panel list">
-      @for (category of categories(); track category.id) {
-        <div class="row">
-          <span><i [style.background]="category.color"></i>{{ category.name }}</span>
-          <div class="actions">
-            <button type="button" class="ghost small" (click)="edit(category)">Editar</button>
-            <button type="button" class="ghost small danger" (click)="remove(category)">Excluir</button>
+      @if (categories().length) {
+        @for (category of categories(); track category.id) {
+          <div class="row">
+            <span><i [style.background]="category.color"></i>{{ category.name }}</span>
+            <div class="actions">
+              <button type="button" class="ghost small" (click)="edit(category)">Editar</button>
+              <button type="button" class="ghost small danger" (click)="remove(category)">Excluir</button>
+            </div>
           </div>
+        }
+      } @else {
+        <div class="empty-state">
+          <strong>Nenhuma categoria criada ainda.</strong>
+          <p>Crie a primeira categoria para organizar receitas e despesas com mais clareza.</p>
         </div>
       }
     </article>

@@ -12,6 +12,20 @@ export interface ManagedUser {
   role: 'ADMIN' | 'USER';
 }
 
+export interface UserFormPayload {
+  name: string;
+  username: string;
+  password: string;
+  role: 'ADMIN' | 'USER';
+}
+
+export interface UserUpdatePayload {
+  name: string;
+  username: string;
+  password?: string;
+  role: 'ADMIN' | 'USER';
+}
+
 export interface AuthResponse {
   token: string;
   tokenType: string;
@@ -30,7 +44,6 @@ export interface Income {
   description: string;
   amount: number;
   receiveDate: string;
-  expectedDay: number;
 }
 
 export type ExpenseType = 'FIXED' | 'VARIABLE' | 'INSTALLMENT';
@@ -43,7 +56,6 @@ export interface Expense {
   categoryColor: string;
   type: ExpenseType;
   paymentMethod: PaymentMethod;
-  paymentSource: string;
   amount: number;
   originalAmount: number;
   dueDate: string;
@@ -58,12 +70,27 @@ export interface DashboardSummary {
   totalExpenses: number;
   goalAmount: number;
   netBalance: number;
-  debitExpenses: number;
-  creditExpenses: number;
+  creditUsage: PaymentMethodUsage;
   byCategory: { category: string; color: string; total: number }[];
-  byPaymentSource: { source: string; total: number }[];
+  byPaymentMethod: PaymentMethodUsage[];
   incomes: Income[];
   expenses: Expense[];
+}
+
+export interface PaymentMethodUsage {
+  method: string;
+  spent: number;
+  limitAmount: number;
+  remaining: number;
+}
+
+export interface MonthlyPlanning {
+  month: string;
+  goalAmount: number;
+  creditLimit: number;
+  debitLimit: number;
+  pixLimit: number;
+  cashLimit: number;
 }
 
 export interface MonthlyCloseResponse {

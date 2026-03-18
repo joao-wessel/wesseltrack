@@ -1,9 +1,9 @@
-﻿import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FinanceService } from '../../core/finance.service';
 import { ToastService } from '../../core/toast.service';
-import { Category, Expense } from '../../core/models';
+import { Category, Expense, PaymentMethod } from '../../core/models';
 
 @Component({
   selector: 'app-expenses-page',
@@ -25,7 +25,6 @@ export class ExpensesPageComponent {
     categoryId: this.fb.control<number | null>(null, [Validators.required, Validators.min(1)]),
     type: this.fb.nonNullable.control<'FIXED' | 'VARIABLE' | 'INSTALLMENT'>('VARIABLE', Validators.required),
     paymentMethod: this.fb.nonNullable.control<'DEBIT' | 'CREDIT' | 'CASH' | 'PIX'>('DEBIT', Validators.required),
-    paymentSource: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(60)]),
     amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
     dueDate: this.fb.nonNullable.control('', Validators.required),
     recurring: this.fb.nonNullable.control(false),
@@ -88,7 +87,6 @@ export class ExpensesPageComponent {
       categoryId: category?.id ?? null,
       type: item.type,
       paymentMethod: item.paymentMethod,
-      paymentSource: item.paymentSource,
       amount: item.amount,
       dueDate: item.dueDate,
       recurring: item.recurring,
@@ -113,7 +111,6 @@ export class ExpensesPageComponent {
       categoryId: null,
       type: 'VARIABLE',
       paymentMethod: 'DEBIT',
-      paymentSource: '',
       amount: null,
       dueDate: '',
       recurring: false,
@@ -136,5 +133,17 @@ export class ExpensesPageComponent {
   private toYearMonth(date: Date): string {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   }
-}
 
+  paymentMethodLabel(method: PaymentMethod): string {
+    switch (method) {
+      case 'CREDIT':
+        return 'Crédito';
+      case 'DEBIT':
+        return 'Débito';
+      case 'PIX':
+        return 'PIX';
+      case 'CASH':
+        return 'Dinheiro';
+    }
+  }
+}

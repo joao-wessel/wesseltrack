@@ -6,7 +6,7 @@
     </div>
     <label class="month-filter">
       <span>Mês</span>
-      <input type="month" [value]="month()" (input)="changeMonth($any($event.target).value)" />
+      <input type="month" lang="pt-BR" [value]="month()" (input)="changeMonth($any($event.target).value)" />
     </label>
   </div>
 
@@ -27,14 +27,8 @@
 
       <label>
         <span>Data de recebimento</span>
-        <input type="date" formControlName="receiveDate" />
+        <input type="date" lang="pt-BR" formControlName="receiveDate" />
         @if (form.controls.receiveDate.touched && form.controls.receiveDate.invalid) { <small class="error">Selecione a data.</small> }
-      </label>
-
-      <label>
-        <span>Dia esperado</span>
-        <input type="number" formControlName="expectedDay" placeholder="Ex.: 5" />
-        @if (form.controls.expectedDay.touched && form.controls.expectedDay.invalid) { <small class="error">Informe um dia entre 1 e 31.</small> }
       </label>
 
       <div class="actions">
@@ -44,17 +38,24 @@
     </form>
 
     <article class="panel list">
-      @for (income of incomes(); track income.id) {
-        <div class="row">
-          <div>
-            <strong>{{ income.description }}</strong>
-            <small>{{ income.receiveDate | date:'dd/MM/yyyy' }} · dia esperado {{ income.expectedDay }}</small>
+      @if (incomes().length) {
+        @for (income of incomes(); track income.id) {
+          <div class="row">
+            <div>
+              <strong>{{ income.description }}</strong>
+              <small>{{ income.receiveDate | date:'dd/MM/yyyy' }}</small>
+            </div>
+            <div class="actions compact">
+              <strong>{{ income.amount | currency:'BRL':'symbol':'1.2-2' }}</strong>
+              <button type="button" class="ghost small" (click)="edit(income)">Editar</button>
+              <button type="button" class="ghost small danger" (click)="remove(income)">Excluir</button>
+            </div>
           </div>
-          <div class="actions compact">
-            <strong>{{ income.amount | currency:'BRL':'symbol':'1.2-2' }}</strong>
-            <button type="button" class="ghost small" (click)="edit(income)">Editar</button>
-            <button type="button" class="ghost small danger" (click)="remove(income)">Excluir</button>
-          </div>
+        }
+      } @else {
+        <div class="empty-state">
+          <strong>Nenhuma receita cadastrada neste mês.</strong>
+          <p>As receitas adicionadas aparecerão aqui com data e valor padronizados.</p>
         </div>
       }
     </article>

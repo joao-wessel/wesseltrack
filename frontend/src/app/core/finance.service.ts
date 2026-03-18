@@ -1,6 +1,16 @@
 ﻿import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { DashboardSummary, Category, Expense, Income, ManagedUser, MonthlyCloseResponse } from './models';
+import {
+  DashboardSummary,
+  Category,
+  Expense,
+  Income,
+  ManagedUser,
+  MonthlyCloseResponse,
+  MonthlyPlanning,
+  UserFormPayload,
+  UserUpdatePayload
+} from './models';
 
 @Injectable({ providedIn: 'root' })
 export class FinanceService {
@@ -32,11 +42,11 @@ export class FinanceService {
     return this.http.get<Income[]>(`${this.apiUrl}/incomes`, { params: { month } });
   }
 
-  createIncome(payload: { description: string; amount: number; receiveDate: string; expectedDay: number }) {
+  createIncome(payload: { description: string; amount: number; receiveDate: string }) {
     return this.http.post<Income>(`${this.apiUrl}/incomes`, payload);
   }
 
-  updateIncome(id: number, payload: { description: string; amount: number; receiveDate: string; expectedDay: number }) {
+  updateIncome(id: number, payload: { description: string; amount: number; receiveDate: string }) {
     return this.http.put<Income>(`${this.apiUrl}/incomes/${id}`, payload);
   }
 
@@ -53,7 +63,6 @@ export class FinanceService {
     categoryId: number;
     type: 'FIXED' | 'VARIABLE' | 'INSTALLMENT';
     paymentMethod: 'DEBIT' | 'CREDIT' | 'CASH' | 'PIX';
-    paymentSource: string;
     amount: number;
     dueDate: string;
     recurring: boolean;
@@ -67,7 +76,6 @@ export class FinanceService {
     categoryId: number;
     type: 'FIXED' | 'VARIABLE' | 'INSTALLMENT';
     paymentMethod: 'DEBIT' | 'CREDIT' | 'CASH' | 'PIX';
-    paymentSource: string;
     amount: number;
     dueDate: string;
     recurring: boolean;
@@ -84,6 +92,14 @@ export class FinanceService {
     return this.http.post<number>(`${this.apiUrl}/goals`, payload);
   }
 
+  getPlanning(month: string) {
+    return this.http.get<MonthlyPlanning>(`${this.apiUrl}/goals/planning`, { params: { month } });
+  }
+
+  savePlanning(payload: MonthlyPlanning) {
+    return this.http.post<MonthlyPlanning>(`${this.apiUrl}/goals/planning`, payload);
+  }
+
   closeMonth(month: string) {
     return this.http.post<MonthlyCloseResponse>(`${this.apiUrl}/monthly-close`, null, { params: { month } });
   }
@@ -92,7 +108,15 @@ export class FinanceService {
     return this.http.get<ManagedUser[]>(`${this.apiUrl}/users`);
   }
 
-  createUser(payload: { name: string; username: string; password: string; role: 'ADMIN' | 'USER' }) {
+  createUser(payload: UserFormPayload) {
     return this.http.post<ManagedUser>(`${this.apiUrl}/users`, payload);
+  }
+
+  updateUser(id: number, payload: UserUpdatePayload) {
+    return this.http.put<ManagedUser>(`${this.apiUrl}/users/${id}`, payload);
+  }
+
+  deleteUser(id: number) {
+    return this.http.delete<void>(`${this.apiUrl}/users/${id}`);
   }
 }

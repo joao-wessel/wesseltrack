@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FinanceService } from '../../../core/finance.service';
@@ -17,14 +17,16 @@ export class UsersPageComponent {
   private readonly toastService = inject(ToastService);
 
   readonly users = signal<ManagedUser[]>([]);
+  readonly editingId = signal<number | null>(null);
   readonly form = this.fb.nonNullable.group({
     name: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(120)]),
     username: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(4), Validators.maxLength(80)]),
-    password: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(8), Validators.maxLength(120)]),
+    password: this.fb.nonNullable.control('', [Validators.minLength(8), Validators.maxLength(120)]),
     role: this.fb.nonNullable.control<'ADMIN' | 'USER'>('USER', Validators.required)
   });
 
   constructor() {
+    this.requirePassword();
     this.load();
   }
 
@@ -35,14 +37,62 @@ export class UsersPageComponent {
       return;
     }
 
-    this.financeService.createUser(this.form.getRawValue()).subscribe({
+    const raw = this.form.getRawValue();
+    const payload = {
+      name: raw.name,
+      username: raw.username,
+      role: raw.role,
+      ...(raw.password ? { password: raw.password } : {})
+    };
+
+    const request = this.editingId()
+      ? this.financeService.updateUser(this.editingId()!, payload)
+      : this.financeService.createUser({ ...payload, password: raw.password });
+
+    request.subscribe({
       next: () => {
-        this.toastService.success('Usuário criado com sucesso.');
-        this.form.reset({ name: '', username: '', password: '', role: 'USER' });
+        this.toastService.success(this.editingId() ? 'Usuário atualizado com sucesso.' : 'Usuário criado com sucesso.');
+        this.cancel();
         this.load();
       },
-      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao criar usuário.')
+      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar usuário.')
     });
+  }
+
+  edit(user: ManagedUser) {
+    this.editingId.set(user.id);
+    this.form.controls.password.setValidators([Validators.minLength(8), Validators.maxLength(120)]);
+    this.form.controls.password.updateValueAndValidity({ emitEvent: false });
+    this.form.reset({
+      name: user.name,
+      username: user.username,
+      password: '',
+      role: user.role
+    });
+  }
+
+  remove(user: ManagedUser) {
+    this.financeService.deleteUser(user.id).subscribe({
+      next: () => {
+        this.toastService.success('Usuário excluído com sucesso.');
+        if (this.editingId() === user.id) {
+          this.cancel();
+        }
+        this.load();
+      },
+      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao excluir usuário.')
+    });
+  }
+
+  cancel() {
+    this.editingId.set(null);
+    this.requirePassword();
+    this.form.reset({ name: '', username: '', password: '', role: 'USER' });
+  }
+
+  private requirePassword() {
+    this.form.controls.password.setValidators([Validators.required, Validators.minLength(8), Validators.maxLength(120)]);
+    this.form.controls.password.updateValueAndValidity({ emitEvent: false });
   }
 
   private load() {

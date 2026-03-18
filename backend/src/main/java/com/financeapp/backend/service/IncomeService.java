@@ -51,11 +51,10 @@ public class IncomeService {
         income.setDescription(request.description().trim());
         income.setAmount(request.amount());
         income.setReceiveDate(request.receiveDate());
-        income.setExpectedDay(request.expectedDay());
         return income;
     }
 
     private IncomeResponse map(Income income) {
-        return new IncomeResponse(income.getId(), income.getDescription(), income.getAmount(), income.getReceiveDate(), income.getExpectedDay());
+        return new IncomeResponse(income.getId(), income.getDescription(), income.getAmount(), income.getReceiveDate());
     }
 }

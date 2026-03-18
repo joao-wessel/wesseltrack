@@ -44,7 +44,7 @@ public class ExpenseService {
                 .category(category)
                 .type(request.type())
                 .paymentMethod(request.paymentMethod())
-                .paymentSource(request.paymentSource().trim())
+                .paymentSource(resolvePaymentSource(request.paymentMethod()))
                 .amount(request.amount())
                 .originalAmount(request.amount())
                 .description(request.description().trim())
@@ -69,7 +69,7 @@ public class ExpenseService {
         expense.setCategory(category);
         expense.setType(request.type());
         expense.setPaymentMethod(request.paymentMethod());
-        expense.setPaymentSource(request.paymentSource().trim());
+        expense.setPaymentSource(resolvePaymentSource(request.paymentMethod()));
         expense.setAmount(request.amount());
         expense.setOriginalAmount(request.type() == ExpenseType.INSTALLMENT ? expense.getOriginalAmount() : request.amount());
         expense.setDescription(request.description().trim());
@@ -151,7 +151,7 @@ public class ExpenseService {
                     .category(category)
                     .type(ExpenseType.INSTALLMENT)
                     .paymentMethod(request.paymentMethod())
-                    .paymentSource(request.paymentSource().trim())
+                    .paymentSource(resolvePaymentSource(request.paymentMethod()))
                     .amount(perInstallment)
                     .originalAmount(request.amount())
                     .description(request.description().trim())
@@ -183,5 +183,14 @@ public class ExpenseService {
                 expense.getInstallmentNumber(),
                 expense.getInstallmentCount()
         );
+    }
+
+    private String resolvePaymentSource(PaymentMethod paymentMethod) {
+        return switch (paymentMethod) {
+            case CREDIT -> "Cartao de credito";
+            case DEBIT -> "Cartao de debito";
+            case PIX -> "PIX";
+            case CASH -> "Dinheiro";
+        };
     }
 }

@@ -1,4 +1,4 @@
-﻿<section class="form-page">
+<section class="form-page">
   <div class="page-header">
     <div>
       <h2>Cadastro de despesas</h2>
@@ -6,7 +6,7 @@
     </div>
     <label class="month-filter">
       <span>Mês</span>
-      <input type="month" [value]="month()" (input)="changeMonth($any($event.target).value)" />
+      <input type="month" lang="pt-BR" [value]="month()" (input)="changeMonth($any($event.target).value)" />
     </label>
   </div>
 
@@ -41,23 +41,15 @@
         </label>
       </div>
 
-      <div class="two-columns">
-        <label>
-          <span>Forma de pagamento</span>
-          <select formControlName="paymentMethod">
-            <option value="DEBIT">Débito</option>
-            <option value="CREDIT">Crédito</option>
-            <option value="PIX">PIX</option>
-            <option value="CASH">Dinheiro</option>
-          </select>
-        </label>
-
-        <label>
-          <span>Origem do pagamento</span>
-          <input type="text" formControlName="paymentSource" placeholder="Ex.: Cartão Nubank" />
-          @if (form.controls.paymentSource.touched && form.controls.paymentSource.invalid) { <small class="error">Informe a origem do pagamento.</small> }
-        </label>
-      </div>
+      <label>
+        <span>Forma de pagamento</span>
+        <select formControlName="paymentMethod">
+          <option value="DEBIT">Débito</option>
+          <option value="CREDIT">Crédito</option>
+          <option value="PIX">PIX</option>
+          <option value="CASH">Dinheiro</option>
+        </select>
+      </label>
 
       <div class="two-columns">
         <label>
@@ -68,7 +60,7 @@
 
         <label>
           <span>Data</span>
-          <input type="date" formControlName="dueDate" />
+          <input type="date" lang="pt-BR" formControlName="dueDate" />
           @if (form.controls.dueDate.touched && form.controls.dueDate.invalid) { <small class="error">Selecione a data.</small> }
         </label>
       </div>
@@ -95,17 +87,24 @@
     </form>
 
     <article class="panel list">
-      @for (expense of expenses(); track expense.id) {
-        <div class="row">
-          <div>
-            <strong>{{ expense.description }}</strong>
-            <small>{{ expense.category }} · {{ expense.paymentSource }} · {{ expense.dueDate | date:'dd/MM/yyyy' }}</small>
+      @if (expenses().length) {
+        @for (expense of expenses(); track expense.id) {
+          <div class="row">
+            <div>
+              <strong>{{ expense.description }}</strong>
+              <small>{{ expense.category }} · {{ paymentMethodLabel(expense.paymentMethod) }} · {{ expense.dueDate | date:'dd/MM/yyyy' }}</small>
+            </div>
+            <div class="actions compact">
+              <strong>{{ expense.amount | currency:'BRL':'symbol':'1.2-2' }}</strong>
+              <button type="button" class="ghost small" (click)="edit(expense)">Editar</button>
+              <button type="button" class="ghost small danger" (click)="remove(expense)">Excluir</button>
+            </div>
           </div>
-          <div class="actions compact">
-            <strong>{{ expense.amount | currency:'BRL':'symbol':'1.2-2' }}</strong>
-            <button type="button" class="ghost small" (click)="edit(expense)">Editar</button>
-            <button type="button" class="ghost small danger" (click)="remove(expense)">Excluir</button>
-          </div>
+        }
+      } @else {
+        <div class="empty-state">
+          <strong>Nenhuma despesa cadastrada neste mês.</strong>
+          <p>Quando você lançar despesas, elas aparecerão aqui com o mesmo espaço visual dentro da lista.</p>
         </div>
       }
     </article>

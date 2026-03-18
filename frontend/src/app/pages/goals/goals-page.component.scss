@@ -1,10 +1,12 @@
-﻿.form-page { display: grid; gap: 1rem; }
+.form-page { display: grid; gap: 1rem; }
 .page-header h2, .page-header p { margin: 0; }
 .page-header p { color: #64748b; }
 .panel { background: rgba(255,255,255,.9); border-radius: 1.5rem; padding: 1.4rem; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 24px 70px rgba(15,23,42,.08); }
-.form-grid { display: grid; gap: 1rem; max-width: 34rem; }
+.form-grid { display: grid; gap: 1rem; max-width: 48rem; }
+.two-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 label { display: grid; gap: 0.45rem; font-weight: 700; color: #334155; }
 input, button { height: 3rem; border-radius: 0.95rem; font: inherit; }
 input { border: 1px solid #cbd5e1; padding: 0 1rem; }
 button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weight: 700; }
 .error { color: #b91c1c; font-weight: 500; }
+@media (max-width: 800px) { .two-columns { grid-template-columns: 1fr; } }

@@ -22,8 +22,7 @@ export class IncomesPageComponent {
   readonly form = this.fb.nonNullable.group({
     description: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(120)]),
     amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
-    receiveDate: this.fb.nonNullable.control('', Validators.required),
-    expectedDay: this.fb.control<number | null>(null, [Validators.required, Validators.min(1), Validators.max(31)])
+    receiveDate: this.fb.nonNullable.control('', Validators.required)
   });
 
   constructor() {
@@ -74,7 +73,7 @@ export class IncomesPageComponent {
 
   cancel() {
     this.editingId.set(null);
-    this.form.reset({ description: '', amount: null, receiveDate: '', expectedDay: null });
+    this.form.reset({ description: '', amount: null, receiveDate: '' });
   }
 
   private load() {

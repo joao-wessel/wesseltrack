@@ -12,7 +12,6 @@ public record ExpenseRequest(
         @NotNull Long categoryId,
         @NotNull ExpenseType type,
         @NotNull PaymentMethod paymentMethod,
-        @NotBlank @Size(max = 60) String paymentSource,
         @NotNull @DecimalMin(value = "0.01") BigDecimal amount,
         @NotNull LocalDate dueDate,
         boolean recurring,

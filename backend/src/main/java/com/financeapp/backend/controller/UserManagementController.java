@@ -1,6 +1,7 @@
 package com.financeapp.backend.controller;
 
-import com.financeapp.backend.dto.RegisterRequest;
+import com.financeapp.backend.dto.UserCreateRequest;
+import com.financeapp.backend.dto.UserUpdateRequest;
 import com.financeapp.backend.dto.UserResponse;
 import com.financeapp.backend.service.UserManagementService;
 import jakarta.validation.Valid;
@@ -26,7 +27,18 @@ public class UserManagementController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse create(@Valid @RequestBody RegisterRequest request) {
+    public UserResponse create(@Valid @RequestBody UserCreateRequest request) {
         return userManagementService.create(request);
+    }
+
+    @PutMapping("/{id}")
+    public UserResponse update(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest request) {
+        return userManagementService.update(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        userManagementService.delete(id);
     }
 }
