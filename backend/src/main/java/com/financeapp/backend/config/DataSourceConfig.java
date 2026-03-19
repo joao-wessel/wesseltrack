@@ -7,6 +7,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 import javax.sql.DataSource;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class DataSourceConfig {
@@ -18,11 +21,17 @@ public class DataSourceConfig {
                 environment.getProperty("DATABASE_URL"),
                 "jdbc:sqlite:finance.db"
         );
-        String jdbcUrl = normalizeJdbcUrl(configuredUrl);
+        DatabaseSettings settings = resolveDatabaseSettings(configuredUrl, environment);
 
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl(jdbcUrl);
-        dataSource.setDriverClassName(resolveDriverClassName(jdbcUrl, environment.getProperty("SPRING_DATASOURCE_DRIVER_CLASS_NAME")));
+        dataSource.setJdbcUrl(settings.jdbcUrl());
+        dataSource.setDriverClassName(resolveDriverClassName(settings.jdbcUrl(), environment.getProperty("SPRING_DATASOURCE_DRIVER_CLASS_NAME")));
+        if (settings.username() != null && !settings.username().isBlank()) {
+            dataSource.setUsername(settings.username());
+        }
+        if (settings.password() != null && !settings.password().isBlank()) {
+            dataSource.setPassword(settings.password());
+        }
         return dataSource;
     }
 
@@ -43,7 +52,7 @@ public class DataSourceConfig {
                 "jdbc:sqlite:finance.db"
         );
 
-        return normalizeJdbcUrl(configuredUrl).startsWith("jdbc:postgresql:")
+        return resolveDatabaseSettings(configuredUrl, environment).jdbcUrl().startsWith("jdbc:postgresql:")
                 ? "org.hibernate.dialect.PostgreSQLDialect"
                 : "org.hibernate.community.dialect.SQLiteDialect";
     }
@@ -58,11 +67,39 @@ public class DataSourceConfig {
                 : "org.sqlite.JDBC";
     }
 
-    private String normalizeJdbcUrl(String value) {
-        if (value.startsWith("postgresql://")) {
-            return "jdbc:" + value;
+    private DatabaseSettings resolveDatabaseSettings(String configuredUrl, Environment environment) {
+        String explicitUsername = environment.getProperty("SPRING_DATASOURCE_USERNAME");
+        String explicitPassword = environment.getProperty("SPRING_DATASOURCE_PASSWORD");
+
+        if (configuredUrl.startsWith("postgresql://")) {
+            URI uri = URI.create(configuredUrl);
+            String[] credentials = parseCredentials(uri.getUserInfo());
+            String jdbcUrl = "jdbc:postgresql://" + uri.getHost() + (uri.getPort() > 0 ? ":" + uri.getPort() : "") + uri.getPath();
+            if (uri.getQuery() != null && !uri.getQuery().isBlank()) {
+                jdbcUrl += "?" + uri.getQuery();
+            }
+
+            String username = explicitUsername != null && !explicitUsername.isBlank() ? explicitUsername : credentials[0];
+            String password = explicitPassword != null && !explicitPassword.isBlank() ? explicitPassword : credentials[1];
+            return new DatabaseSettings(jdbcUrl, username, password);
         }
-        return value;
+
+        return new DatabaseSettings(configuredUrl, explicitUsername, explicitPassword);
+    }
+
+    private String[] parseCredentials(String userInfo) {
+        if (userInfo == null || userInfo.isBlank()) {
+            return new String[] { null, null };
+        }
+
+        String[] rawParts = userInfo.split(":", 2);
+        String username = decode(rawParts[0]);
+        String password = rawParts.length > 1 ? decode(rawParts[1]) : null;
+        return new String[] { username, password };
+    }
+
+    private String decode(String value) {
+        return URLDecoder.decode(value, StandardCharsets.UTF_8);
     }
 
     private String firstNonBlank(String... values) {
@@ -73,4 +110,6 @@ public class DataSourceConfig {
         }
         throw new IllegalStateException("Nenhuma URL de banco configurada.");
     }
+
+    private record DatabaseSettings(String jdbcUrl, String username, String password) {}
 }
