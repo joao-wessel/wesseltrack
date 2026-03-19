@@ -24,12 +24,17 @@ Variáveis opcionais:
 
 - `APP_JWT_SECRET`
 - `APP_CORS_ALLOWED_ORIGINS`
+- `DATABASE_URL`
 - `SPRING_DATASOURCE_URL`
-- `SPRING_DATASOURCE_DRIVER_CLASS_NAME`
-- `SPRING_JPA_DATABASE_PLATFORM`
 - `SPRING_JPA_HIBERNATE_DDL_AUTO`
 
 Sem variáveis externas, o backend usa SQLite local em `backend/finance.db`.
+
+O backend aceita automaticamente:
+
+- `jdbc:sqlite:...`
+- `jdbc:postgresql://...`
+- `postgresql://...` (formato comum do Render)
 
 ### Frontend
 
@@ -53,38 +58,87 @@ Por padrão, o frontend lê `frontend/public/app-config.json` e usa:
 }
 ```
 
-## Deploy no Render
+## Deploy manual no Render
 
-O repositório já inclui `render.yaml` com:
+### 1. Banco Postgres
 
-- `wesseltrack-api`: Web Service Docker (Free)
-- `wesseltrack-web`: Static Site Angular
-- `wesseltrack-db`: Postgres gerenciado (Free)
+No Render:
 
-### Como publicar
+- `New +` > `Postgres`
+- crie um banco para a aplicação
+- copie a `External Database URL` ou `Internal Database URL`
 
-1. Suba este repositório para o GitHub.
-2. No Render, escolha `New +` > `Blueprint`.
-3. Selecione o repositório.
-4. Confirme a criação dos 3 recursos definidos no `render.yaml`.`r`n5. Durante a criação do Blueprint, informe manualmente:`r`n   - `API_BASE_URL`: URL pública da API com `/api` no final. Ex.: `https://wesseltrack-api.onrender.com/api``r`n   - `APP_CORS_ALLOWED_ORIGINS`: URL pública do frontend. Ex.: `https://wesseltrack-web.onrender.com`
-6. Aguarde o primeiro deploy.`r`n7. No primeiro acesso, crie o usuário administrador se o banco estiver vazio.
+### 2. Backend
 
-### O que o blueprint faz
+No Render:
 
-- backend:
-  - builda em `backend/`
-  - expõe healthcheck em `/actuator/health`
-  - recebe `APP_JWT_SECRET` automaticamente
-  - usa Postgres do Render
-- frontend:
-  - builda em `frontend/`
-  - gera `public/app-config.json` durante o build com a URL da API
-  - publica a SPA com rewrite para `index.html`
+- `New +` > `Web Service`
+- selecione o repositório
+- configure:
 
-### Observações
+- `Root Directory`: `backend`
+- `Runtime`: `Docker`
+- `Dockerfile Path`: `./Dockerfile`
+- `Health Check Path`: `/actuator/health`
 
-- Em produção, use serviço pago no Render. A documentação atual do Render informa que o runtime nativo não inclui Java, então o backend foi preparado com Docker.`r`n- Mesmo em serviços Free, a Render pode exigir cartão para verificação/antiabuso em algumas contas.
-- O projeto ainda usa `spring.jpa.hibernate.ddl-auto=update` por praticidade. Para evolução segura em produção, o próximo passo recomendado é adotar migrações versionadas.`r`n- O frontend lê a URL da API em `app-config.json`, então o deploy não fica preso em `localhost`.
+Variáveis de ambiente:
 
+- `APP_JWT_SECRET`: gere um valor forte
+- `APP_CORS_ALLOWED_ORIGINS`: URL pública do frontend
+- `DATABASE_URL`: URL do Postgres fornecida pelo Render
+- `SPRING_JPA_HIBERNATE_DDL_AUTO`: `update`
 
+Exemplo:
 
+```text
+APP_CORS_ALLOWED_ORIGINS=https://app.seudominio.com
+DATABASE_URL=postgresql://usuario:senha@host:5432/wesseltrack
+```
+
+### 3. Frontend
+
+No Render:
+
+- `New +` > `Static Site`
+- selecione o mesmo repositório
+- configure:
+
+- `Root Directory`: `frontend`
+- `Build Command`: `sh scripts/render-build.sh`
+- `Publish Directory`: `dist/frontend/browser`
+
+Variável de ambiente:
+
+- `API_BASE_URL`: URL pública do backend com `/api` no final
+
+Exemplo:
+
+```text
+API_BASE_URL=https://api.seudominio.com/api
+```
+
+### 4. Domínio próprio
+
+Sugestão:
+
+- frontend: `app.seudominio.com`
+- backend: `api.seudominio.com`
+
+Valores correspondentes:
+
+```text
+APP_CORS_ALLOWED_ORIGINS=https://app.seudominio.com
+API_BASE_URL=https://api.seudominio.com/api
+```
+
+Depois do deploy:
+
+1. adicione o domínio customizado em cada serviço no Render
+2. crie os registros DNS no seu provedor
+3. valide o domínio no painel do Render
+
+## Observações
+
+- O frontend lê a URL da API em runtime via `app-config.json`, então o deploy não fica preso em `localhost`.
+- O backend foi preparado para aceitar a URL do Postgres do Render sem conversão manual.
+- O projeto ainda usa `spring.jpa.hibernate.ddl-auto=update` por praticidade. Para produção mais segura, o próximo passo recomendado é adotar migrações versionadas.
