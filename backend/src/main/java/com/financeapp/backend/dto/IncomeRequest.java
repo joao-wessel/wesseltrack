@@ -8,6 +8,8 @@ import java.time.LocalDate;
 public record IncomeRequest(
         @NotBlank @Size(max = 120) String description,
         @NotNull @DecimalMin(value = "0.01") BigDecimal amount,
-        @NotNull LocalDate receiveDate
+        LocalDate receiveDate,
+        @Min(1) @Max(31) Integer expectedDay,
+        boolean recurring
 ) {
 }

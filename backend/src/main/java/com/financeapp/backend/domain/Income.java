@@ -31,4 +31,10 @@ public class Income {
 
     @Column(nullable = false)
     private LocalDate receiveDate;
+
+    @Column(name = "expected_day", nullable = false)
+    private Integer expectedDay;
+
+    @Column(nullable = false)
+    private boolean recurring;
 }

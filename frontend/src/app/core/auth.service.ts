@@ -1,14 +1,17 @@
-﻿import { Injectable, signal, computed } from '@angular/core';
+﻿import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs';
 import { AuthResponse, UserProfile } from './models';
+import { RUNTIME_CONFIG } from './runtime-config';
 
 interface LoginPayload { username: string; password: string; }
+interface ChangePasswordPayload { currentPassword: string; newPassword: string; confirmPassword: string; }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly apiUrl = 'http://localhost:8080/api';
+  private readonly runtimeConfig = inject(RUNTIME_CONFIG);
+  private readonly apiUrl = this.runtimeConfig.apiBaseUrl;
   private readonly tokenKey = 'wesseltrack.token';
   private readonly userKey = 'wesseltrack.user';
 
@@ -22,6 +25,10 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, payload).pipe(
       tap((response) => this.storeSession(response))
     );
+  }
+
+  changePassword(payload: ChangePasswordPayload) {
+    return this.http.post<void>(`${this.apiUrl}/account/change-password`, payload);
   }
 
   logout() {

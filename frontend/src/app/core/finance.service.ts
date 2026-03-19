@@ -1,20 +1,12 @@
-﻿import { Injectable } from '@angular/core';
+﻿import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import {
-  DashboardSummary,
-  Category,
-  Expense,
-  Income,
-  ManagedUser,
-  MonthlyCloseResponse,
-  MonthlyPlanning,
-  UserFormPayload,
-  UserUpdatePayload
-} from './models';
+import { DashboardSummary, Category, Expense, Income, ManagedUser, PlanningSettings } from './models';
+import { RUNTIME_CONFIG } from './runtime-config';
 
 @Injectable({ providedIn: 'root' })
 export class FinanceService {
-  private readonly apiUrl = 'http://localhost:8080/api';
+  private readonly runtimeConfig = inject(RUNTIME_CONFIG);
+  private readonly apiUrl = this.runtimeConfig.apiBaseUrl;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -42,11 +34,11 @@ export class FinanceService {
     return this.http.get<Income[]>(`${this.apiUrl}/incomes`, { params: { month } });
   }
 
-  createIncome(payload: { description: string; amount: number; receiveDate: string }) {
+  createIncome(payload: { description: string; amount: number; receiveDate?: string | null; expectedDay?: number | null; recurring: boolean }) {
     return this.http.post<Income>(`${this.apiUrl}/incomes`, payload);
   }
 
-  updateIncome(id: number, payload: { description: string; amount: number; receiveDate: string }) {
+  updateIncome(id: number, payload: { description: string; amount: number; receiveDate?: string | null; expectedDay?: number | null; recurring: boolean }) {
     return this.http.put<Income>(`${this.apiUrl}/incomes/${id}`, payload);
   }
 
@@ -60,7 +52,7 @@ export class FinanceService {
 
   createExpense(payload: {
     description: string;
-    categoryId: number;
+    categoryId?: number | null;
     type: 'FIXED' | 'VARIABLE' | 'INSTALLMENT';
     paymentMethod: 'DEBIT' | 'CREDIT' | 'CASH' | 'PIX';
     amount: number;
@@ -73,7 +65,7 @@ export class FinanceService {
 
   updateExpense(id: number, payload: {
     description: string;
-    categoryId: number;
+    categoryId?: number | null;
     type: 'FIXED' | 'VARIABLE' | 'INSTALLMENT';
     paymentMethod: 'DEBIT' | 'CREDIT' | 'CASH' | 'PIX';
     amount: number;
@@ -88,31 +80,23 @@ export class FinanceService {
     return this.http.delete<void>(`${this.apiUrl}/expenses/${id}`);
   }
 
-  saveGoal(payload: { month: string; amount: number }) {
-    return this.http.post<number>(`${this.apiUrl}/goals`, payload);
+  getPlanningSettings() {
+    return this.http.get<PlanningSettings>(`${this.apiUrl}/goals/settings`);
   }
 
-  getPlanning(month: string) {
-    return this.http.get<MonthlyPlanning>(`${this.apiUrl}/goals/planning`, { params: { month } });
-  }
-
-  savePlanning(payload: MonthlyPlanning) {
-    return this.http.post<MonthlyPlanning>(`${this.apiUrl}/goals/planning`, payload);
-  }
-
-  closeMonth(month: string) {
-    return this.http.post<MonthlyCloseResponse>(`${this.apiUrl}/monthly-close`, null, { params: { month } });
+  savePlanningSettings(payload: PlanningSettings) {
+    return this.http.put<PlanningSettings>(`${this.apiUrl}/goals/settings`, payload);
   }
 
   getUsers() {
     return this.http.get<ManagedUser[]>(`${this.apiUrl}/users`);
   }
 
-  createUser(payload: UserFormPayload) {
+  createUser(payload: { name: string; username: string; password: string; role: 'ADMIN' | 'USER' }) {
     return this.http.post<ManagedUser>(`${this.apiUrl}/users`, payload);
   }
 
-  updateUser(id: number, payload: UserUpdatePayload) {
+  updateUser(id: number, payload: { name: string; username: string; password?: string | null; role: 'ADMIN' | 'USER' }) {
     return this.http.put<ManagedUser>(`${this.apiUrl}/users/${id}`, payload);
   }
 

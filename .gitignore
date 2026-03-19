@@ -1,5 +1,7 @@
-backend/target/
+﻿backend/target/
 backend/finance.db
 frontend/node_modules/
 frontend/dist/
+frontend/.angular/
 backend.zip
+*.class

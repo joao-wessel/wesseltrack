@@ -3,6 +3,7 @@ package com.financeapp.backend.service;
 import com.financeapp.backend.domain.AppUser;
 import com.financeapp.backend.domain.Role;
 import com.financeapp.backend.dto.AuthResponse;
+import com.financeapp.backend.dto.ChangePasswordRequest;
 import com.financeapp.backend.dto.LoginRequest;
 import com.financeapp.backend.dto.RegisterRequest;
 import com.financeapp.backend.repository.AppUserRepository;
@@ -23,6 +24,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final LoginAttemptService loginAttemptService;
+    private final CurrentUserService currentUserService;
 
     public AuthResponse bootstrapAdmin(RegisterRequest request) {
         if (userRepository.count() > 0) {
@@ -62,6 +64,25 @@ public class AuthService {
 
         loginAttemptService.loginSucceeded(username);
         return toAuthResponse(user);
+    }
+
+    public void changePassword(ChangePasswordRequest request) {
+        AppUser user = currentUserService.requireCurrentUser();
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new BadCredentialsException("A senha atual está incorreta.");
+        }
+
+        if (!request.newPassword().equals(request.confirmPassword())) {
+            throw new IllegalArgumentException("A confirmação da nova senha não confere.");
+        }
+
+        if (passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("A nova senha deve ser diferente da senha atual.");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
     }
 
     private BadCredentialsException invalidCredentials(String username) {

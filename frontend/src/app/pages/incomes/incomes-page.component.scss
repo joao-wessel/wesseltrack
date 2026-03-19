@@ -1,23 +1,36 @@
-﻿.form-page, .form-grid, .list { display: grid; gap: 1rem; }
-.page-header { display: flex; justify-content: space-between; gap: 1rem; align-items: end; }
-.page-header h2, .page-header p { margin: 0; }
-.page-header p, small { color: #64748b; }
-.month-filter { max-width: 12rem; display: grid; gap: 0.45rem; align-self: stretch; }
-.split { display: grid; grid-template-columns: 400px 1fr; gap: 1rem; }
+.form-page, .form-grid, .list { display: grid; gap: 1rem; }
+.list { max-height: 24rem; overflow-y: auto; align-content: start; padding-right: 0.25rem; }
+.header-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 12rem); gap: 1rem; align-items: end; padding-right: 0.35rem; }
+.header-panel h2, .header-panel p { margin: 0; }
+.header-panel p, small { color: #64748b; }
+.month-filter { display: grid; gap: 0.45rem; width: 100%; min-width: 0; justify-self: end; }
+.month-filter input { width: 100%; min-width: 0; box-sizing: border-box; }
 .panel { background: rgba(255,255,255,.9); border-radius: 1.5rem; padding: 1.4rem; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 24px 70px rgba(15,23,42,.08); }
+.tabs-panel { display: grid; gap: 1.25rem; }
+.tab-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.tab-content { display: grid; grid-template-columns: minmax(320px, 420px) 1fr; gap: 1rem; align-items: start; }
+.inner-panel { box-shadow: none; background: #fff; }
 label { display: grid; gap: 0.45rem; font-weight: 700; color: #334155; }
-input, button { height: 3rem; border-radius: 0.95rem; font: inherit; }
+input, button { height: 3rem; border-radius: 0.95rem; font: inherit; box-sizing: border-box; }
 input { border: 1px solid #cbd5e1; padding: 0 1rem; }
-.month-filter input { width: 100%; }
 .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
 .actions.compact { justify-content: end; }
 button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weight: 700; padding: 0 1rem; }
 button.ghost { background: #fff; color: #0f172a; border: 1px solid #cbd5e1; }
 button.small { height: 2.5rem; }
 button.danger { color: #b91c1c; }
-.row { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; min-height: 5.5rem; background: #f8fafc; border-radius: 1rem; padding: 0.9rem 1rem; }
-.list { align-content: start; }
-.empty-state { min-height: 11rem; display: grid; gap: 0.5rem; align-content: center; justify-items: start; text-align: left; padding: 1.25rem; border-radius: 1rem; border: 1px dashed #cbd5e1; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); }
-.empty-state p { margin: 0; color: #64748b; max-width: 32rem; }
-.error { color: #b91c1c; font-weight: 500; }
-@media (max-width: 900px) { .split, .page-header, .row { grid-template-columns: 1fr; display: grid; } }
+.tab-button { background: #e2e8f0; color: #475569; }
+.tab-button.active { background: #0f172a; color: #fff; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; min-height: 5rem; background: #f8fafc; border-radius: 1rem; padding: 0.9rem 1rem; }
+.row > div:first-child { display: grid; gap: 0.35rem; }
+.row small { display: block; }
+.row small span { display: inline-block; margin-right: 0.5rem; }
+.row small span:last-child { margin-right: 0; }
+.empty-row { grid-template-columns: 1fr; }
+.secondary-title { margin-top: 1rem; }
+@media (max-width: 1200px) { .tab-content { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+  .header-panel, .row { grid-template-columns: 1fr; display: grid; }
+  .month-filter { justify-self: stretch; }
+}
+

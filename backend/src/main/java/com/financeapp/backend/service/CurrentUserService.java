@@ -18,7 +18,7 @@ public class CurrentUserService {
     public AppUser requireCurrentUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication instanceof JwtAuthenticationToken jwtAuthenticationToken)) {
-            throw new EntityNotFoundException("Usuario autenticado nao encontrado");
+            throw new EntityNotFoundException("Usuário autenticado não encontrado.");
         }
 
         AuthenticatedUser principal = AuthenticatedUser.fromJwt(jwtAuthenticationToken.getToken());

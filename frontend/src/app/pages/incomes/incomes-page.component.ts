@@ -1,13 +1,14 @@
-﻿import { Component, inject, signal } from '@angular/core';
+﻿import { Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FinanceService } from '../../core/finance.service';
 import { ToastService } from '../../core/toast.service';
 import { Income } from '../../core/models';
+import { CurrencyMaskDirective } from '../../core/currency-mask.directive';
 
 @Component({
   selector: 'app-incomes-page',
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe, CurrencyMaskDirective],
   templateUrl: './incomes-page.component.html',
   styleUrl: './incomes-page.component.scss'
 })
@@ -16,14 +17,29 @@ export class IncomesPageComponent {
   private readonly financeService = inject(FinanceService);
   private readonly toastService = inject(ToastService);
 
+  @ViewChild('monthlyAmountInput') private monthlyAmountInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('fixedAmountInput') private fixedAmountInput?: ElementRef<HTMLInputElement>;
+
   readonly month = signal(this.toYearMonth(new Date()));
   readonly incomes = signal<Income[]>([]);
   readonly editingId = signal<number | null>(null);
-  readonly form = this.fb.nonNullable.group({
+  readonly editingRecurring = signal(false);
+  readonly activeTab = signal<'monthly' | 'fixed'>('monthly');
+
+  readonly monthlyForm = this.fb.nonNullable.group({
     description: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(120)]),
     amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
     receiveDate: this.fb.nonNullable.control('', Validators.required)
   });
+
+  readonly fixedForm = this.fb.nonNullable.group({
+    description: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(120)]),
+    amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
+    expectedDay: this.fb.control<number | null>(null, [Validators.required, Validators.min(1), Validators.max(31)])
+  });
+
+  readonly recurringIncomes = computed(() => this.incomes().filter((item) => item.recurring));
+  readonly monthlyIncomes = computed(() => this.incomes().filter((item) => !item.recurring));
 
   constructor() {
     this.load();
@@ -34,31 +50,83 @@ export class IncomesPageComponent {
     this.load();
   }
 
-  save() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.toastService.error('Preencha corretamente os campos da receita.');
+  saveMonthly() {
+    if (this.monthlyForm.invalid) {
+      this.monthlyForm.markAllAsTouched();
+      this.toastService.error('Preencha corretamente os campos da receita mensal.');
       return;
     }
 
-    const payload = this.form.getRawValue() as any;
-    const request = this.editingId()
-      ? this.financeService.updateIncome(this.editingId()!, payload)
-      : this.financeService.createIncome(payload);
+    const payload = { ...this.monthlyForm.getRawValue(), expectedDay: null, recurring: false };
+    if (this.editingId() && !this.editingRecurring()) {
+      this.financeService.updateIncome(this.editingId()!, payload as any).subscribe({
+        next: () => this.afterSave('Receita mensal salva com sucesso.', false),
+        error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar receita mensal.')
+      });
+      return;
+    }
 
-    request.subscribe({
-      next: () => {
-        this.toastService.success('Receita salva com sucesso.');
-        this.cancel();
-        this.load();
-      },
-      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar receita.')
+    this.financeService.createIncome(payload as any).subscribe({
+      next: () => this.afterSave('Receita mensal salva com sucesso.', false),
+      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar receita mensal.')
+    });
+  }
+
+  saveFixed() {
+    if (this.fixedForm.invalid) {
+      this.fixedForm.markAllAsTouched();
+      this.toastService.error('Preencha corretamente os campos da receita fixa.');
+      return;
+    }
+
+    const expectedDay = this.fixedForm.getRawValue().expectedDay;
+    const payload = {
+      ...this.fixedForm.getRawValue(),
+      receiveDate: this.referenceDateForExpectedDay(expectedDay),
+      recurring: true
+    };
+    if (this.editingId() && this.editingRecurring()) {
+      this.financeService.updateIncome(this.editingId()!, payload as any).subscribe({
+        next: () => this.afterSave('Receita fixa salva com sucesso.', true),
+        error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar receita fixa.')
+      });
+      return;
+    }
+
+    this.financeService.createIncome(payload as any).subscribe({
+      next: () => this.afterSave('Receita fixa salva com sucesso.', true),
+      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar receita fixa.')
     });
   }
 
   edit(item: Income) {
     this.editingId.set(item.id);
-    this.form.patchValue(item);
+    this.editingRecurring.set(item.recurring);
+
+    const values = {
+      description: item.description,
+      amount: item.amount,
+      receiveDate: item.receiveDate,
+      expectedDay: item.expectedDay
+    };
+
+    if (item.recurring) {
+      this.activeTab.set('fixed');
+      this.fixedForm.patchValue({
+        description: values.description,
+        amount: values.amount,
+        expectedDay: values.expectedDay
+      });
+      this.syncMaskedInput(this.fixedAmountInput, values.amount);
+    } else {
+      this.activeTab.set('monthly');
+      this.monthlyForm.patchValue({
+        description: values.description,
+        amount: values.amount,
+        receiveDate: values.receiveDate
+      });
+      this.syncMaskedInput(this.monthlyAmountInput, values.amount);
+    }
   }
 
   remove(item: Income) {
@@ -73,7 +141,19 @@ export class IncomesPageComponent {
 
   cancel() {
     this.editingId.set(null);
-    this.form.reset({ description: '', amount: null, receiveDate: '' });
+    this.editingRecurring.set(false);
+    this.monthlyForm.reset({ description: '', amount: null, receiveDate: '' });
+    this.fixedForm.reset({ description: '', amount: null, expectedDay: null });
+  }
+
+  selectTab(tab: 'monthly' | 'fixed') {
+    this.activeTab.set(tab);
+  }
+
+  private afterSave(message: string, recurring: boolean) {
+    this.toastService.success(message);
+    this.cancel();
+    this.load();
   }
 
   private load() {
@@ -85,5 +165,33 @@ export class IncomesPageComponent {
 
   private toYearMonth(date: Date): string {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  private referenceDateForExpectedDay(expectedDay: number | null): string | null {
+    if (!expectedDay) {
+      return null;
+    }
+
+    const [year, month] = this.month().split('-').map(Number);
+    const reference = new Date(year, month - 1, Math.min(expectedDay, new Date(year, month, 0).getDate()));
+    return `${reference.getFullYear()}-${String(reference.getMonth() + 1).padStart(2, '0')}-${String(reference.getDate()).padStart(2, '0')}`;
+  }
+
+  private syncMaskedInput(inputRef: ElementRef<HTMLInputElement> | undefined, value: number | null) {
+    setTimeout(() => {
+      if (!inputRef) {
+        return;
+      }
+
+      if (value === null || value === undefined) {
+        inputRef.nativeElement.value = '';
+        return;
+      }
+
+      inputRef.nativeElement.value = new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(value);
+    }, 0);
   }
 }

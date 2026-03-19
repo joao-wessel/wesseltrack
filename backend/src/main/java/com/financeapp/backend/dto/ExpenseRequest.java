@@ -9,7 +9,7 @@ import java.time.LocalDate;
 
 public record ExpenseRequest(
         @NotBlank @Size(max = 140) String description,
-        @NotNull Long categoryId,
+        Long categoryId,
         @NotNull ExpenseType type,
         @NotNull PaymentMethod paymentMethod,
         @NotNull @DecimalMin(value = "0.01") BigDecimal amount,

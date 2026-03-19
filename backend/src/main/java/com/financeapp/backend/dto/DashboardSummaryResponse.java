@@ -8,6 +8,8 @@ public record DashboardSummaryResponse(
         BigDecimal totalExpenses,
         BigDecimal goalAmount,
         BigDecimal netBalance,
+        BigDecimal maxCreditCardBill,
+        BigDecimal fixedExpensesOutsideCredit,
         PaymentMethodUsage creditUsage,
         java.util.List<CategoryTotal> byCategory,
         java.util.List<PaymentMethodUsage> byPaymentMethod,

@@ -9,11 +9,17 @@
       <h3>{{ editingId() ? 'Editar categoria' : 'Nova categoria' }}</h3>
       <label>
         <span>Nome</span>
-        <input type="text" formControlName="name" placeholder="Ex.: Moradia" />
+        <input type="text" formControlName="name" placeholder="Nome da categoria" />
       </label>
       <label>
         <span>Cor</span>
-        <input type="color" formControlName="color" />
+        <div class="color-picker-row">
+          <input type="color" formControlName="color" />
+          <div class="color-preview">
+            <i [style.background]="form.controls.color.value"></i>
+            <strong>{{ form.controls.color.value }}</strong>
+          </div>
+        </div>
       </label>
       <div class="actions">
         <button type="submit">Salvar</button>
@@ -22,20 +28,17 @@
     </form>
 
     <article class="panel list">
-      @if (categories().length) {
-        @for (category of categories(); track category.id) {
-          <div class="row">
-            <span><i [style.background]="category.color"></i>{{ category.name }}</span>
-            <div class="actions">
-              <button type="button" class="ghost small" (click)="edit(category)">Editar</button>
-              <button type="button" class="ghost small danger" (click)="remove(category)">Excluir</button>
-            </div>
+      @for (category of categories(); track category.id) {
+        <div class="row">
+          <span class="category-label"><i [style.background]="category.color"></i>{{ category.name }}</span>
+          <div class="actions">
+            <button type="button" class="ghost small" (click)="edit(category)">Editar</button>
+            <button type="button" class="ghost small danger" (click)="remove(category)">Excluir</button>
           </div>
-        }
-      } @else {
-        <div class="empty-state">
-          <strong>Nenhuma categoria criada ainda.</strong>
-          <p>Crie a primeira categoria para organizar receitas e despesas com mais clareza.</p>
+        </div>
+      } @empty {
+        <div class="row empty-row">
+          <small>Nenhuma categoria cadastrada.</small>
         </div>
       }
     </article>

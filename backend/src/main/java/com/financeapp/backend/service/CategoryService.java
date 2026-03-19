@@ -4,8 +4,8 @@ import com.financeapp.backend.domain.AppUser;
 import com.financeapp.backend.domain.Category;
 import com.financeapp.backend.dto.CategoryRequest;
 import com.financeapp.backend.dto.CategoryResponse;
-import com.financeapp.backend.repository.ExpenseRepository;
 import com.financeapp.backend.repository.CategoryRepository;
+import com.financeapp.backend.repository.ExpenseRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +16,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
+
+    private static final String UNCATEGORIZED_NAME = "Sem categoria";
+    private static final String UNCATEGORIZED_COLOR = "#94a3b8";
 
     private final CategoryRepository categoryRepository;
     private final ExpenseRepository expenseRepository;
@@ -45,6 +48,15 @@ public class CategoryService {
     public Category requireOwnedCategory(Long id, AppUser user) {
         return categoryRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new EntityNotFoundException("Categoria não encontrada."));
+    }
+
+    public Category findOrCreateUncategorized(AppUser user) {
+        return categoryRepository.findByUserAndNameIgnoreCase(user, UNCATEGORIZED_NAME)
+                .orElseGet(() -> categoryRepository.save(Category.builder()
+                        .user(user)
+                        .name(UNCATEGORIZED_NAME)
+                        .color(UNCATEGORIZED_COLOR)
+                        .build()));
     }
 
     public CategoryResponse update(Long id, CategoryRequest request) {

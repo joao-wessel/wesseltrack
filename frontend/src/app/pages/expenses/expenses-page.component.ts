@@ -1,13 +1,14 @@
-import { Component, computed, inject, signal } from '@angular/core';
+﻿import { Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FinanceService } from '../../core/finance.service';
 import { ToastService } from '../../core/toast.service';
-import { Category, Expense, PaymentMethod } from '../../core/models';
+import { Category, Expense } from '../../core/models';
+import { CurrencyMaskDirective } from '../../core/currency-mask.directive';
 
 @Component({
   selector: 'app-expenses-page',
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe, CurrencyMaskDirective],
   templateUrl: './expenses-page.component.html',
   styleUrl: './expenses-page.component.scss'
 })
@@ -16,23 +17,44 @@ export class ExpensesPageComponent {
   private readonly financeService = inject(FinanceService);
   private readonly toastService = inject(ToastService);
 
+  @ViewChild('quickAmountInput') private quickAmountInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('fixedAmountInput') private fixedAmountInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('installmentAmountInput') private installmentAmountInput?: ElementRef<HTMLInputElement>;
+
   readonly month = signal(this.toYearMonth(new Date()));
   readonly expenses = signal<Expense[]>([]);
   readonly categories = signal<Category[]>([]);
   readonly editingId = signal<number | null>(null);
-  readonly form = this.fb.nonNullable.group({
+  readonly editingMode = signal<'quick' | 'fixed' | 'installment' | null>(null);
+  readonly activeTab = signal<'quick' | 'fixed' | 'installment'>('quick');
+
+  readonly quickForm = this.fb.nonNullable.group({
     description: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(140)]),
     categoryId: this.fb.control<number | null>(null, [Validators.required, Validators.min(1)]),
-    type: this.fb.nonNullable.control<'FIXED' | 'VARIABLE' | 'INSTALLMENT'>('VARIABLE', Validators.required),
     paymentMethod: this.fb.nonNullable.control<'DEBIT' | 'CREDIT' | 'CASH' | 'PIX'>('DEBIT', Validators.required),
     amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
-    dueDate: this.fb.nonNullable.control('', Validators.required),
-    recurring: this.fb.nonNullable.control(false),
-    installmentCount: this.fb.control<number | null>(null, [Validators.min(1), Validators.max(60)])
+    dueDate: this.fb.nonNullable.control('', Validators.required)
   });
 
-  readonly isFixed = computed(() => this.form.controls.type.value === 'FIXED');
-  readonly isInstallment = computed(() => this.form.controls.type.value === 'INSTALLMENT');
+  readonly fixedForm = this.fb.nonNullable.group({
+    description: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(140)]),
+    categoryId: this.fb.control<number | null>(null, [Validators.required, Validators.min(1)]),
+    paymentMethod: this.fb.nonNullable.control<'DEBIT' | 'CREDIT' | 'CASH' | 'PIX'>('DEBIT', Validators.required),
+    amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
+    dueDate: this.fb.nonNullable.control('', Validators.required)
+  });
+
+  readonly installmentForm = this.fb.nonNullable.group({
+    description: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(140)]),
+    categoryId: this.fb.control<number | null>(null, [Validators.required, Validators.min(1)]),
+    amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
+    dueDate: this.fb.nonNullable.control('', Validators.required),
+    installmentCount: this.fb.control<number | null>(null, [Validators.required, Validators.min(1), Validators.max(60)])
+  });
+
+  readonly quickExpenses = computed(() => this.expenses().filter((item) => item.type === 'VARIABLE'));
+  readonly fixedExpenses = computed(() => this.expenses().filter((item) => item.type === 'FIXED'));
+  readonly installmentExpenses = computed(() => this.expenses().filter((item) => item.type === 'INSTALLMENT'));
 
   constructor() {
     this.load();
@@ -43,55 +65,86 @@ export class ExpensesPageComponent {
     this.load();
   }
 
-  save() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.toastService.error('Preencha corretamente os campos da despesa.');
+  saveQuick() {
+    if (this.quickForm.invalid) {
+      this.quickForm.markAllAsTouched();
+      this.toastService.error('Preencha corretamente os campos do lançamento rápido.');
       return;
     }
 
-    const value = this.form.getRawValue();
+    const payload = { ...this.quickForm.getRawValue(), type: 'VARIABLE', recurring: false };
+    this.saveExpense(payload as any, 'quick', 'Despesa rápida salva com sucesso.');
+  }
+
+  saveFixed() {
+    if (this.fixedForm.invalid) {
+      this.fixedForm.markAllAsTouched();
+      this.toastService.error('Preencha corretamente os campos da despesa fixa.');
+      return;
+    }
+
+    const payload = { ...this.fixedForm.getRawValue(), type: 'FIXED', recurring: true };
+    this.saveExpense(payload as any, 'fixed', 'Despesa fixa salva com sucesso.');
+  }
+
+  saveInstallment() {
+    if (this.installmentForm.invalid) {
+      this.installmentForm.markAllAsTouched();
+      this.toastService.error('Preencha corretamente os campos da compra parcelada.');
+      return;
+    }
+
     const payload = {
-      ...value,
-      recurring: value.type === 'FIXED' ? value.recurring : false,
-      installmentCount: value.type === 'INSTALLMENT' ? value.installmentCount ?? 1 : undefined
+      ...this.installmentForm.getRawValue(),
+      type: 'INSTALLMENT',
+      paymentMethod: 'CREDIT',
+      recurring: false
     };
-
-    if (this.editingId()) {
-      this.financeService.updateExpense(this.editingId()!, payload as any).subscribe({
-        next: () => {
-          this.toastService.success('Despesa salva com sucesso.');
-          this.cancel();
-          this.load();
-        },
-        error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar despesa.')
-      });
-      return;
-    }
-
-    this.financeService.createExpense(payload as any).subscribe({
-      next: () => {
-        this.toastService.success('Despesa salva com sucesso.');
-        this.cancel();
-        this.load();
-      },
-      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar despesa.')
-    });
+    this.saveExpense(payload as any, 'installment', 'Compra parcelada salva com sucesso.');
   }
 
   edit(item: Expense) {
-    const category = this.categories().find((entry) => entry.name === item.category);
     this.editingId.set(item.id);
-    this.form.patchValue({
+    const category = this.categories().find((entry) => entry.name === item.category);
+
+    if (item.type === 'VARIABLE') {
+      this.activeTab.set('quick');
+      this.editingMode.set('quick');
+      this.quickForm.patchValue({
+        description: item.description,
+        categoryId: category?.id ?? null,
+        paymentMethod: item.paymentMethod,
+        amount: item.amount,
+        dueDate: item.dueDate
+      });
+      this.syncMaskedInput(this.quickAmountInput, item.amount);
+      return;
+    }
+
+    if (item.type === 'FIXED') {
+      this.activeTab.set('fixed');
+      this.editingMode.set('fixed');
+      this.fixedForm.patchValue({
+        description: item.description,
+        categoryId: category?.id ?? null,
+        paymentMethod: item.paymentMethod,
+        amount: item.amount,
+        dueDate: item.dueDate
+      });
+      this.syncMaskedInput(this.fixedAmountInput, item.amount);
+      return;
+    }
+
+    this.activeTab.set('installment');
+    this.editingMode.set('installment');
+    this.installmentForm.patchValue({
       description: item.description,
       categoryId: category?.id ?? null,
-      type: item.type,
-      paymentMethod: item.paymentMethod,
-      amount: item.amount,
+      amount: item.originalAmount,
       dueDate: item.dueDate,
-      recurring: item.recurring,
       installmentCount: item.installmentCount
     });
+    this.syncMaskedInput(this.installmentAmountInput, item.originalAmount);
   }
 
   remove(item: Expense) {
@@ -106,15 +159,49 @@ export class ExpensesPageComponent {
 
   cancel() {
     this.editingId.set(null);
-    this.form.reset({
-      description: '',
-      categoryId: null,
-      type: 'VARIABLE',
-      paymentMethod: 'DEBIT',
-      amount: null,
-      dueDate: '',
-      recurring: false,
-      installmentCount: null
+    this.editingMode.set(null);
+    this.quickForm.reset({ description: '', categoryId: null, paymentMethod: 'DEBIT', amount: null, dueDate: '' });
+    this.fixedForm.reset({ description: '', categoryId: null, paymentMethod: 'DEBIT', amount: null, dueDate: '' });
+    this.installmentForm.reset({ description: '', categoryId: null, amount: null, dueDate: '', installmentCount: null });
+  }
+
+  selectTab(tab: 'quick' | 'fixed' | 'installment') {
+    this.activeTab.set(tab);
+  }
+
+  paymentMethodLabel(method: Expense['paymentMethod']) {
+    switch (method) {
+      case 'CREDIT':
+        return 'Crédito';
+      case 'DEBIT':
+        return 'Débito';
+      case 'PIX':
+        return 'PIX';
+      case 'CASH':
+        return 'Dinheiro';
+    }
+  }
+
+  private saveExpense(payload: any, mode: 'quick' | 'fixed' | 'installment', successMessage: string) {
+    if (this.editingId() && this.editingMode() === mode) {
+      this.financeService.updateExpense(this.editingId()!, payload).subscribe({
+        next: () => {
+          this.toastService.success(successMessage);
+          this.cancel();
+          this.load();
+        },
+        error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar despesa.')
+      });
+      return;
+    }
+
+    this.financeService.createExpense(payload).subscribe({
+      next: () => {
+        this.toastService.success(successMessage);
+        this.cancel();
+        this.load();
+      },
+      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar despesa.')
     });
   }
 
@@ -134,16 +221,21 @@ export class ExpensesPageComponent {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   }
 
-  paymentMethodLabel(method: PaymentMethod): string {
-    switch (method) {
-      case 'CREDIT':
-        return 'Crédito';
-      case 'DEBIT':
-        return 'Débito';
-      case 'PIX':
-        return 'PIX';
-      case 'CASH':
-        return 'Dinheiro';
-    }
+  private syncMaskedInput(inputRef: ElementRef<HTMLInputElement> | undefined, value: number | null) {
+    setTimeout(() => {
+      if (!inputRef) {
+        return;
+      }
+
+      if (value === null || value === undefined) {
+        inputRef.nativeElement.value = '';
+        return;
+      }
+
+      inputRef.nativeElement.value = new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(value);
+    }, 0);
   }
 }

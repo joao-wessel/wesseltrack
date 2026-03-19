@@ -5,21 +5,24 @@ import com.financeapp.backend.domain.MonthlyGoal;
 import com.financeapp.backend.domain.MonthlyPaymentLimit;
 import com.financeapp.backend.domain.PaymentMethod;
 import com.financeapp.backend.dto.MonthlyGoalRequest;
-import com.financeapp.backend.dto.MonthlyPlanningRequest;
 import com.financeapp.backend.dto.MonthlyPlanningResponse;
+import com.financeapp.backend.dto.PlanningSettingsRequest;
+import com.financeapp.backend.dto.PlanningSettingsResponse;
 import com.financeapp.backend.repository.MonthlyGoalRepository;
 import com.financeapp.backend.repository.MonthlyPaymentLimitRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.EnumMap;
 import java.time.YearMonth;
+import java.util.EnumMap;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class GoalService {
+
+    private static final YearMonth SETTINGS_MONTH = YearMonth.of(2000, 1);
 
     private final MonthlyGoalRepository monthlyGoalRepository;
     private final MonthlyPaymentLimitRepository monthlyPaymentLimitRepository;
@@ -42,27 +45,34 @@ public class GoalService {
 
     public MonthlyPlanningResponse getPlanning(YearMonth month) {
         AppUser user = currentUserService.requireCurrentUser();
-        BigDecimal goalAmount = getGoal(month);
-        Map<PaymentMethod, BigDecimal> limits = loadLimits(user, month);
+        BigDecimal goalAmount = getGoal(SETTINGS_MONTH);
+        Map<PaymentMethod, BigDecimal> limits = loadLimits(user, SETTINGS_MONTH);
 
         return new MonthlyPlanningResponse(
                 month,
                 goalAmount,
                 limits.get(PaymentMethod.CREDIT),
-                limits.get(PaymentMethod.DEBIT),
-                limits.get(PaymentMethod.PIX),
-                limits.get(PaymentMethod.CASH)
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO
         );
     }
 
-    public MonthlyPlanningResponse savePlanning(MonthlyPlanningRequest request) {
+    public PlanningSettingsResponse getSettings() {
         AppUser user = currentUserService.requireCurrentUser();
-        save(new MonthlyGoalRequest(request.month(), request.goalAmount()));
-        saveLimit(user, request.month(), PaymentMethod.CREDIT, request.creditLimit());
-        saveLimit(user, request.month(), PaymentMethod.DEBIT, request.debitLimit());
-        saveLimit(user, request.month(), PaymentMethod.PIX, request.pixLimit());
-        saveLimit(user, request.month(), PaymentMethod.CASH, request.cashLimit());
-        return getPlanning(request.month());
+        BigDecimal goalAmount = getGoal(SETTINGS_MONTH);
+        Map<PaymentMethod, BigDecimal> limits = loadLimits(user, SETTINGS_MONTH);
+        return new PlanningSettingsResponse(goalAmount, limits.get(PaymentMethod.CREDIT));
+    }
+
+    public PlanningSettingsResponse saveSettings(PlanningSettingsRequest request) {
+        AppUser user = currentUserService.requireCurrentUser();
+        save(new MonthlyGoalRequest(SETTINGS_MONTH, request.reserveGoal()));
+        saveLimit(user, SETTINGS_MONTH, PaymentMethod.CREDIT, request.creditLimit());
+        saveLimit(user, SETTINGS_MONTH, PaymentMethod.DEBIT, BigDecimal.ZERO);
+        saveLimit(user, SETTINGS_MONTH, PaymentMethod.PIX, BigDecimal.ZERO);
+        saveLimit(user, SETTINGS_MONTH, PaymentMethod.CASH, BigDecimal.ZERO);
+        return getSettings();
     }
 
     private void saveLimit(AppUser user, YearMonth month, PaymentMethod paymentMethod, BigDecimal amount) {

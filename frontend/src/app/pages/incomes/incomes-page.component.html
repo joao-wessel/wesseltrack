@@ -1,63 +1,69 @@
 ﻿<section class="form-page">
-  <div class="page-header">
+  <div class="page-header header-panel">
     <div>
-      <h2>Cadastro de receitas</h2>
-      <p>Lance salários, entradas extras e recebimentos previstos do mês.</p>
+      <h2>Receitas</h2>
+      <p>Receitas fixas passam a valer em todos os meses futuros; receitas mensais entram apenas no mês lançado.</p>
     </div>
     <label class="month-filter">
       <span>Mês</span>
-      <input type="month" lang="pt-BR" [value]="month()" (input)="changeMonth($any($event.target).value)" />
+      <input type="month" [value]="month()" (input)="changeMonth($any($event.target).value)" />
     </label>
   </div>
 
-  <div class="split">
-    <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
-      <h3>{{ editingId() ? 'Editar receita' : 'Nova receita' }}</h3>
-      <label>
-        <span>Descrição</span>
-        <input type="text" formControlName="description" placeholder="Ex.: Salário principal" />
-        @if (form.controls.description.touched && form.controls.description.invalid) { <small class="error">Informe a descrição.</small> }
-      </label>
+  <section class="panel tabs-panel">
+    <div class="tab-list">
+      <button type="button" class="tab-button" [class.active]="activeTab() === 'monthly'" (click)="selectTab('monthly')">Receita mensal</button>
+      <button type="button" class="tab-button" [class.active]="activeTab() === 'fixed'" (click)="selectTab('fixed')">Receita fixa</button>
+    </div>
 
-      <label>
-        <span>Valor</span>
-        <input type="number" formControlName="amount" step="0.01" placeholder="Ex.: 3500,00" />
-        @if (form.controls.amount.touched && form.controls.amount.invalid) { <small class="error">Informe um valor maior que zero.</small> }
-      </label>
+    @if (activeTab() === 'monthly') {
+      <div class="tab-content">
+        <form [formGroup]="monthlyForm" (ngSubmit)="saveMonthly()" class="panel inner-panel form-grid">
+          <h3>Receita mensal</h3>
+          <label><span>Descrição</span><input type="text" formControlName="description" placeholder="Descrição" /></label>
+          <label><span>Valor</span><input #monthlyAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
+          <label><span>Data</span><input type="date" formControlName="receiveDate" /></label>
+          <div class="actions"><button type="submit">Salvar receita mensal</button>@if (editingId() && !editingRecurring()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
+        </form>
 
-      <label>
-        <span>Data de recebimento</span>
-        <input type="date" lang="pt-BR" formControlName="receiveDate" />
-        @if (form.controls.receiveDate.touched && form.controls.receiveDate.invalid) { <small class="error">Selecione a data.</small> }
-      </label>
-
-      <div class="actions">
-        <button type="submit">Salvar receita</button>
-        @if (editingId()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }
-      </div>
-    </form>
-
-    <article class="panel list">
-      @if (incomes().length) {
-        @for (income of incomes(); track income.id) {
-          <div class="row">
-            <div>
-              <strong>{{ income.description }}</strong>
-              <small>{{ income.receiveDate | date:'dd/MM/yyyy' }}</small>
-            </div>
-            <div class="actions compact">
-              <strong>{{ income.amount | currency:'BRL':'symbol':'1.2-2' }}</strong>
-              <button type="button" class="ghost small" (click)="edit(income)">Editar</button>
-              <button type="button" class="ghost small danger" (click)="remove(income)">Excluir</button>
-            </div>
+        <article class="panel inner-panel list-panel">
+          <h3>Receitas mensais</h3>
+          <div class="list">
+            @for (income of monthlyIncomes(); track income.id) {
+              <div class="row">
+                <div><strong>{{ income.description }}</strong><small><span>{{ income.receiveDate | date:'dd/MM/yyyy' }}</span></small></div>
+                <div class="actions compact"><strong>{{ income.amount | currency:'BRL':'symbol':'1.2-2' }}</strong><button type="button" class="ghost small" (click)="edit(income)">Editar</button><button type="button" class="ghost small danger" (click)="remove(income)">Excluir</button></div>
+              </div>
+            } @empty {
+              <div class="row empty-row"><small><span>Nenhuma receita mensal cadastrada para este mês.</span></small></div>
+            }
           </div>
-        }
-      } @else {
-        <div class="empty-state">
-          <strong>Nenhuma receita cadastrada neste mês.</strong>
-          <p>As receitas adicionadas aparecerão aqui com data e valor padronizados.</p>
-        </div>
-      }
-    </article>
-  </div>
+        </article>
+      </div>
+    } @else {
+      <div class="tab-content">
+        <form [formGroup]="fixedForm" (ngSubmit)="saveFixed()" class="panel inner-panel form-grid">
+          <h3>Receita fixa</h3>
+          <label><span>Descrição</span><input type="text" formControlName="description" placeholder="Descrição" /></label>
+          <label><span>Valor</span><input #fixedAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
+          <label><span>Dia do recebimento</span><input type="number" formControlName="expectedDay" min="1" max="31" placeholder="Dia do mês" /></label>
+          <div class="actions"><button type="submit">Salvar receita fixa</button>@if (editingId() && editingRecurring()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
+        </form>
+
+        <article class="panel inner-panel list-panel">
+          <h3>Receitas fixas</h3>
+          <div class="list">
+            @for (income of recurringIncomes(); track income.id) {
+              <div class="row">
+                <div><strong>{{ income.description }}</strong><small>Aplicada mensalmente no dia {{ income.expectedDay }}</small></div>
+                <div class="actions compact"><strong>{{ income.amount | currency:'BRL':'symbol':'1.2-2' }}</strong><button type="button" class="ghost small" (click)="edit(income)">Editar</button><button type="button" class="ghost small danger" (click)="remove(income)">Excluir</button></div>
+              </div>
+            } @empty {
+              <div class="row empty-row"><small><span>Nenhuma receita fixa cadastrada.</span></small></div>
+            }
+          </div>
+        </article>
+      </div>
+    }
+  </section>
 </section>

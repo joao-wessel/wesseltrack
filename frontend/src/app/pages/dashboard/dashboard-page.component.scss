@@ -1,22 +1,108 @@
-.page-grid, .content-grid, .summary-grid, .list, .table-like { display: grid; gap: 1rem; }
-.page-header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 1rem; }
-.page-header h2, .page-header p { margin: 0; }
+﻿.page-grid, .content-grid, .summary-grid, .left-stack { display: grid; gap: 1rem; }
+.header-panel { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+.header-panel h2, .header-panel p { margin: 0; }
+.header-panel p { color: #64748b; }
 .header-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
 .month-pill, .ghost, button { border-radius: 999px; padding: 0.85rem 1rem; }
 button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weight: 700; }
 .ghost { border: 1px solid #cbd5e1; background: #fff; color: #0f172a; }
-.month-pill { background: rgba(15, 118, 110, 0.12); color: #0f766e; font-weight: 700; text-transform: capitalize; }
+.month-pill { background: rgba(15, 118, 110, 0.12); color: #0f766e; font-weight: 700; }
 .summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.content-grid { grid-template-columns: 1fr 1fr; }
+.content-grid { grid-template-columns: 1.1fr 0.9fr; align-items: stretch; }
+.left-stack { grid-template-rows: 1fr 1fr; height: 100%; }
+.left-stack > .panel,
+.payments-panel { height: 100%; }
 .panel { background: rgba(255,255,255,0.9); border-radius: 1.5rem; padding: 1.3rem; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 24px 70px rgba(15,23,42,.08); }
 .panel-header h3, .panel-header p { margin: 0; }
-.panel-header p, small { color: #64748b; }
-.row, .table-row { display: grid; gap: 1rem; align-items: center; background: #f8fafc; border-radius: 1rem; padding: 0.9rem 1rem; }
-.row { grid-template-columns: 1fr auto; }
-.table-row { grid-template-columns: 1.4fr 0.8fr auto; }
-.label { display: inline-flex; align-items: center; gap: 0.5rem; }
-.label i { width: .8rem; height: .8rem; border-radius: 999px; display: inline-block; }
-.over-limit { color: #b91c1c; }
-.wide { grid-column: 1 / -1; }
-@media (max-width: 1100px) { .summary-grid, .content-grid { grid-template-columns: 1fr; } }
-@media (max-width: 720px) { .page-header, .header-actions, .table-row, .row { grid-template-columns: 1fr; display: grid; } }
+.panel-header p { color: #64748b; }
+.pie-layout { display: grid; grid-template-columns: minmax(220px, 260px) 1fr; gap: 1.25rem; align-items: center; margin-top: 1rem; }
+.pie-wrap { display: grid; place-items: center; }
+.pie-chart { width: 220px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; position: relative; }
+.pie-chart::after { content: ''; width: 56%; aspect-ratio: 1; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 1px rgba(148,163,184,.14); }
+.pie-center { position: absolute; display: grid; gap: 0.15rem; text-align: center; z-index: 1; }
+.pie-center strong { font-size: 1rem; }
+.pie-center span { color: #64748b; font-size: 0.85rem; }
+.legend-list { display: grid; gap: 0.75rem; }
+.legend-row { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; padding: 0.8rem 0.9rem; background: #f8fafc; border-radius: 1rem; }
+.legend-label { display: flex; align-items: center; gap: 0.75rem; }
+.legend-label i { width: 0.8rem; height: 0.8rem; border-radius: 999px; display: inline-block; }
+.legend-label strong, .legend-label small { display: block; }
+.legend-label small { color: #64748b; }
+.payment-cards { display: grid; gap: 0.9rem; margin-top: 1rem; }
+.payment-card { display: grid; gap: 0.55rem; padding: 1rem; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-radius: 1.1rem; }
+.payment-card-top { display: flex; align-items: center; gap: 0.65rem; }
+.payment-badge { width: 0.75rem; height: 0.75rem; border-radius: 999px; display: inline-block; }
+.payment-total { font-size: 1.1rem; }
+.payment-card small { color: #64748b; }
+.payment-progress { height: 0.65rem; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+.payment-progress span { display: block; height: 100%; border-radius: 999px; min-width: 0.5rem; }
+.empty-state { display: grid; place-items: center; min-height: 16rem; color: #64748b; text-align: center; }
+.action-panel { display: grid; gap: 1rem; align-content: start; }
+.indicator-header { display: grid; gap: 0.35rem; }
+.indicator-header h3,
+.indicator-header p { margin: 0; }
+.indicator-header p { color: #64748b; }
+.indicator-main { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+.indicator-value { font-size: 1.85rem; line-height: 1.1; }
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.indicator-progress { display: grid; gap: 0.55rem; }
+.indicator-progress-track {
+  height: 0.8rem;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.indicator-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  min-width: 0.4rem;
+}
+.indicator-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+.indicator-progress-labels small {
+  color: #64748b;
+}
+.indicator-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.metric-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+}
+.metric-card strong {
+  font-size: 1rem;
+}
+.action-panel small { color: #64748b; display: block; }
+@media (max-width: 1100px) {
+  .summary-grid, .content-grid, .pie-layout { grid-template-columns: 1fr; }
+  .left-stack { grid-template-rows: auto; height: auto; }
+  .left-stack > .panel,
+  .payments-panel { height: auto; }
+  .indicator-metrics { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .header-panel, .action-panel, .legend-row { grid-template-columns: 1fr; display: grid; }
+  .pie-chart { width: min(100%, 220px); }
+  .indicator-main,
+  .indicator-progress-labels { grid-template-columns: 1fr; display: grid; }
+}

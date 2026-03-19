@@ -1,28 +1,23 @@
-<section class="admin-grid">
+﻿<section class="admin-grid">
   <div class="page-header">
     <h2>Usuários</h2>
-    <p>Apenas administradores podem cadastrar, editar e remover acessos ao WesselTrack.</p>
+    <p>Apenas administradores podem cadastrar novos acessos ao WesselTrack.</p>
   </div>
 
   <div class="split">
     <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
-      <h3>{{ editingId() ? 'Editar usuário' : 'Novo usuário' }}</h3>
-
       <label>
         <span>Nome</span>
-        <input type="text" formControlName="name" placeholder="Ex.: Maria da Silva" />
+        <input type="text" formControlName="name" placeholder="Nome" />
       </label>
-
       <label>
         <span>Usuário</span>
-        <input type="text" formControlName="username" placeholder="Ex.: maria.silva" />
+        <input type="text" formControlName="username" placeholder="Usuário" />
       </label>
-
       <label>
-        <span>{{ editingId() ? 'Nova senha (opcional)' : 'Senha' }}</span>
-        <input type="password" formControlName="password" [placeholder]="editingId() ? 'Preencha apenas se quiser trocar' : 'Senha forte'" />
+        <span>Senha</span>
+        <input type="password" formControlName="password" placeholder="Senha" />
       </label>
-
       <label>
         <span>Perfil</span>
         <select formControlName="role">
@@ -30,34 +25,28 @@
           <option value="ADMIN">Administrador</option>
         </select>
       </label>
-
       <div class="actions">
-        <button type="submit">{{ editingId() ? 'Salvar alterações' : 'Criar usuário' }}</button>
-        @if (editingId()) {
-          <button type="button" class="ghost" (click)="cancel()">Cancelar</button>
-        }
+        <button type="submit">{{ editingId() ? 'Salvar usuário' : 'Criar usuário' }}</button>
+        @if (editingId()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }
       </div>
     </form>
 
     <article class="panel list">
-      @if (users().length) {
-        @for (user of users(); track user.id) {
-          <div class="row">
-            <div>
-              <strong>{{ user.name }}</strong>
-              <small>{{ user.username }}</small>
-            </div>
-            <div class="row-actions">
-              <span class="pill">{{ user.role }}</span>
-              <button type="button" class="ghost small" (click)="edit(user)">Editar</button>
-              <button type="button" class="ghost small danger" (click)="remove(user)">Excluir</button>
-            </div>
+      @for (user of users(); track user.id) {
+        <div class="row">
+          <div class="user-identification">
+            <strong>{{ user.name }}</strong>
+            <small>{{ user.username }}</small>
           </div>
-        }
-      } @else {
-        <div class="empty-state">
-          <strong>Nenhum usuário extra cadastrado.</strong>
-          <p>Os novos acessos criados por administradores aparecerão aqui em uma lista padronizada.</p>
+          <div class="actions inline-actions">
+            <span class="pill">{{ user.role }}</span>
+            <button type="button" class="ghost small" (click)="edit(user)">Editar</button>
+            <button type="button" class="ghost small danger" (click)="remove(user)">Excluir</button>
+          </div>
+        </div>
+      } @empty {
+        <div class="row empty-row">
+          <small>Nenhum usuário cadastrado.</small>
         </div>
       }
     </article>

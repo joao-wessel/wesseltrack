@@ -1,11 +1,13 @@
 package com.financeapp.backend.service;
 
+import com.financeapp.backend.domain.ExpenseType;
 import com.financeapp.backend.domain.PaymentMethod;
 import com.financeapp.backend.dto.DashboardSummaryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.YearMonth;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -24,16 +26,28 @@ public class DashboardService {
         var incomes = incomeService.list(month);
         var expenses = expenseService.list(month);
         var planning = goalService.getPlanning(month);
-        BigDecimal goal = planning.goalAmount();
+        BigDecimal goal = planning.goalAmount() == null ? BigDecimal.ZERO : planning.goalAmount();
 
-        BigDecimal totalIncome = incomes.stream().map(i -> i.amount()).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalExpenses = expenses.stream().map(e -> e.amount()).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalIncome = incomes.stream().map(income -> income.amount()).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalExpenses = expenses.stream().map(expense -> expense.amount()).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal fixedExpensesOutsideCredit = expenses.stream()
+                .filter(expense -> expense.type() == ExpenseType.FIXED)
+                .filter(expense -> expense.paymentMethod() != PaymentMethod.CREDIT)
+                .map(expense -> expense.amount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal maxCreditCardBill = totalIncome.subtract(fixedExpensesOutsideCredit)
+                .divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+        if (maxCreditCardBill.signum() < 0) {
+            maxCreditCardBill = BigDecimal.ZERO;
+        }
 
         Map<String, DashboardSummaryResponse.CategoryTotal> categoryTotals = new LinkedHashMap<>();
         for (var expense : expenses) {
-            categoryTotals.compute(expense.category(), (key, existing) -> {
+            String category = expense.category() == null || expense.category().isBlank() ? "Sem categoria" : expense.category();
+            String color = expense.categoryColor() == null || expense.categoryColor().isBlank() ? "#94a3b8" : expense.categoryColor();
+            categoryTotals.compute(category, (key, existing) -> {
                 BigDecimal total = (existing == null ? BigDecimal.ZERO : existing.total()).add(expense.amount());
-                return new DashboardSummaryResponse.CategoryTotal(expense.category(), expense.categoryColor(), total);
+                return new DashboardSummaryResponse.CategoryTotal(category, color, total);
             });
         }
 
@@ -48,6 +62,9 @@ public class DashboardService {
         List<DashboardSummaryResponse.PaymentMethodUsage> usages = paymentMethodTotals.entrySet().stream()
                 .map(entry -> {
                     BigDecimal limit = planning.limitFor(entry.getKey());
+                    if (limit == null) {
+                        limit = BigDecimal.ZERO;
+                    }
                     BigDecimal spent = entry.getValue();
                     return new DashboardSummaryResponse.PaymentMethodUsage(
                             labelFor(entry.getKey()),
@@ -69,6 +86,8 @@ public class DashboardService {
                 totalExpenses,
                 goal,
                 totalIncome.subtract(totalExpenses).subtract(goal),
+                maxCreditCardBill,
+                fixedExpensesOutsideCredit,
                 creditUsage,
                 List.copyOf(categoryTotals.values()),
                 usages,

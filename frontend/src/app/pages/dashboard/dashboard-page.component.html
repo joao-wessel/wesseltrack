@@ -1,82 +1,151 @@
-<section class="page-grid" *ngIf="dashboard() as data">
-  <div class="page-header">
-    <div>
-      <h2>Painel financeiro</h2>
-      <p>Visão consolidada do mês selecionado.</p>
+﻿<ng-container *ngIf="dashboard() as data; else errorState">
+  <section class="page-grid">
+    <div class="page-header header-panel">
+      <div>
+        <h2>Painel financeiro</h2>
+        <p>Visão consolidada do mês selecionado.</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="ghost" (click)="changeMonth(-1)">Mês anterior</button>
+        <span class="month-pill">{{ activeMonthLabel() }}</span>
+        <button type="button" class="ghost" (click)="changeMonth(1)">Próximo mês</button>
+      </div>
     </div>
-    <div class="header-actions">
-      <button type="button" class="ghost" (click)="changeMonth(-1)">Mês anterior</button>
-      <span class="month-pill">{{ activeMonthLabel() }}</span>
-      <button type="button" class="ghost" (click)="changeMonth(1)">Próximo mês</button>
-      <button type="button" (click)="closeMonth()">Fechar mês</button>
-    </div>
-  </div>
 
-  <section class="summary-grid">
-    <app-summary-card label="Receitas" [value]="data.totalIncome" hint="Entradas previstas no mês" />
-    <app-summary-card label="Despesas" [value]="data.totalExpenses" hint="Fixas, variáveis e parceladas" />
-    <app-summary-card label="Meta" [value]="data.goalAmount" hint="Reserva mensal planejada" />
-    <app-summary-card
-      label="Limite no crédito"
-      [value]="data.creditUsage.remaining"
-      [hint]="'Gasto ' + (data.creditUsage.spent | currency:'BRL':'symbol':'1.2-2') + ' de ' + (data.creditUsage.limitAmount | currency:'BRL':'symbol':'1.2-2')"
-    />
+    <section class="summary-grid">
+      <app-summary-card label="Receitas" [value]="data.totalIncome" hint="Entradas previstas no mês" />
+      <app-summary-card label="Despesas" [value]="data.totalExpenses" hint="Fixas, variáveis e parceladas" />
+      <app-summary-card label="Meta" [value]="data.goalAmount" hint="Reserva mensal configurada" />
+      <app-summary-card label="Saldo" [value]="totalAvailable()" hint="Receitas - despesas - meta" />
+    </section>
+
+    <section class="content-grid">
+      <div class="left-stack">
+        <article class="panel pie-panel">
+          <div class="panel-header">
+            <h3>Gastos por categoria</h3>
+            <p>Distribuição dos gastos por categoria no mês.</p>
+          </div>
+
+          @if (data.byCategory.length) {
+            <div class="pie-layout">
+              <div class="pie-wrap">
+                <div class="pie-chart" [style.background]="pieChartStyle()">
+                  <div class="pie-center">
+                    <strong>{{ data.totalExpenses | currency:'BRL':'symbol':'1.0-0' }}</strong>
+                    <span>Total</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="legend-list">
+                @for (item of data.byCategory; track item.category) {
+                  <div class="legend-row">
+                    <div class="legend-label">
+                      <i [style.background]="item.color"></i>
+                      <div>
+                        <strong>{{ item.category }}</strong>
+                        <small>{{ categoryShare(item.total) | number:'1.0-1' }}%</small>
+                      </div>
+                    </div>
+                    <strong>{{ item.total | currency:'BRL':'symbol':'1.2-2' }}</strong>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="empty-state">
+              <p>Nenhum gasto categorizado neste mês.</p>
+            </div>
+          }
+        </article>
+
+        <article class="panel action-panel">
+          <div class="indicator-header">
+            <h3>Fatura máxima do cartão</h3>
+            <p>(Receitas do mês - contas fixas fora do crédito) ÷ 2</p>
+          </div>
+          <div class="indicator-main">
+            <div>
+              <small>Teto recomendado</small>
+              <strong class="indicator-value">{{ data.maxCreditCardBill | currency:'BRL':'symbol':'1.2-2' }}</strong>
+            </div>
+            <span class="status-pill" [style.color]="creditBillStatusTone()" [style.background]="'color-mix(in srgb, ' + creditBillStatusTone() + ' 12%, white)'">
+              {{ creditBillStatus() }}
+            </span>
+          </div>
+
+          <div class="indicator-progress">
+            <div class="indicator-progress-track">
+              <span [style.width.%]="creditUsageShare()" [style.background]="creditBillStatusTone()"></span>
+            </div>
+            <div class="indicator-progress-labels">
+              <small>Fatura atual no crédito</small>
+              <strong>{{ data.creditUsage.spent | currency:'BRL':'symbol':'1.2-2' }}</strong>
+            </div>
+          </div>
+
+          <div class="indicator-metrics">
+            <div class="metric-card">
+              <small>Receitas do mês</small>
+              <strong>{{ data.totalIncome | currency:'BRL':'symbol':'1.2-2' }}</strong>
+            </div>
+            <div class="metric-card">
+              <small>Fixas fora do crédito</small>
+              <strong>{{ data.fixedExpensesOutsideCredit | currency:'BRL':'symbol':'1.2-2' }}</strong>
+            </div>
+            <div class="metric-card">
+              <small>{{ creditUsageDelta() >= 0 ? 'Folga no teto' : 'Acima do teto' }}</small>
+              <strong>{{ (creditUsageDelta() >= 0 ? creditUsageDelta() : creditUsageDelta() * -1) | currency:'BRL':'symbol':'1.2-2' }}</strong>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <article class="panel payments-panel">
+        <div class="panel-header">
+          <h3>Gastos por forma de pagamento</h3>
+          <p>Resumo por meio de pagamento com participação no total do mês.</p>
+        </div>
+
+        @if (data.byPaymentMethod.length) {
+          <div class="payment-cards">
+            @for (item of data.byPaymentMethod; track item.method) {
+              <div class="payment-card">
+                <div class="payment-card-top">
+                  <span class="payment-badge" [style.background]="paymentMethodColor(item.method)"></span>
+                  <strong>{{ paymentMethodLabel(item.method) }}</strong>
+                </div>
+                <strong class="payment-total">{{ item.spent | currency:'BRL':'symbol':'1.2-2' }}</strong>
+                <small>{{ paymentShare(item.spent) | number:'1.0-1' }}% do total</small>
+                <div class="payment-progress">
+                  <span [style.width.%]="paymentShare(item.spent)" [style.background]="paymentMethodColor(item.method)"></span>
+                </div>
+                @if (item.limitAmount > 0) {
+                  <small>Limite: {{ item.limitAmount | currency:'BRL':'symbol':'1.2-2' }}</small>
+                  <small>Restante: {{ item.remaining | currency:'BRL':'symbol':'1.2-2' }}</small>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <p>Nenhum gasto por forma de pagamento neste mês.</p>
+          </div>
+        }
+      </article>
+    </section>
   </section>
+</ng-container>
 
-  <section class="content-grid">
-    <article class="panel">
-      <div class="panel-header">
-        <h3>Gastos por categoria</h3>
-        <p>Distribuição mensal.</p>
+<ng-template #errorState>
+  <section class="page-grid">
+    <article class="panel action-panel">
+      <div>
+        <h3>Painel indisponível</h3>
+        <p>{{ loadError() ?? 'Não foi possível carregar o painel.' }}</p>
       </div>
-      <div class="list">
-        @for (item of data.byCategory; track item.category) {
-          <div class="row">
-            <span class="label"><i [style.background]="item.color"></i>{{ item.category }}</span>
-            <strong>{{ item.total | currency:'BRL':'symbol':'1.2-2' }}</strong>
-          </div>
-        }
-      </div>
-    </article>
-
-    <article class="panel">
-      <div class="panel-header">
-        <h3>Gastos por forma de pagamento</h3>
-        <p>Total gasto, limite configurado e saldo restante por método.</p>
-      </div>
-      <div class="list">
-        @for (item of data.byPaymentMethod; track item.method) {
-          <div class="row">
-            <div>
-              <strong>{{ item.method }}</strong>
-              <small>Gasto {{ item.spent | currency:'BRL':'symbol':'1.2-2' }} de {{ item.limitAmount | currency:'BRL':'symbol':'1.2-2' }}</small>
-            </div>
-            <strong [class.over-limit]="item.remaining < 0">{{ item.remaining | currency:'BRL':'symbol':'1.2-2' }}</strong>
-          </div>
-        }
-      </div>
-    </article>
-
-    <article class="panel wide">
-      <div class="panel-header">
-        <h3>Despesas do mês</h3>
-        <p>Parceladas entram somente nos meses correspondentes; variáveis afetam apenas o mês atual.</p>
-      </div>
-      <div class="table-like">
-        @for (expense of data.expenses; track expense.id) {
-          <div class="table-row">
-            <div>
-              <strong>{{ expense.description }}</strong>
-              <small>{{ expense.category }} · {{ paymentMethodLabel(expense.paymentMethod) }}</small>
-            </div>
-            <div>
-              <span>{{ expense.type === 'INSTALLMENT' ? expense.installmentNumber + '/' + expense.installmentCount : expense.type }}</span>
-              <small>{{ expense.dueDate | date:'dd/MM/yyyy' }}</small>
-            </div>
-            <strong>{{ expense.amount | currency:'BRL':'symbol':'1.2-2' }}</strong>
-          </div>
-        }
-      </div>
+      <button type="button" (click)="changeMonth(0)">Tentar novamente</button>
     </article>
   </section>
-</section>
+</ng-template>

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+﻿import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FinanceService } from '../../../core/finance.service';
@@ -26,28 +26,28 @@ export class UsersPageComponent {
   });
 
   constructor() {
-    this.requirePassword();
     this.load();
   }
 
   save() {
+    const password = this.form.controls.password.value;
+    if (!this.editingId() && !password) {
+      this.form.controls.password.setErrors({ required: true });
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.toastService.error('Preencha corretamente os campos do usuário.');
       return;
     }
 
-    const raw = this.form.getRawValue();
     const payload = {
-      name: raw.name,
-      username: raw.username,
-      role: raw.role,
-      ...(raw.password ? { password: raw.password } : {})
+      ...this.form.getRawValue(),
+      password: password || null
     };
-
     const request = this.editingId()
       ? this.financeService.updateUser(this.editingId()!, payload)
-      : this.financeService.createUser({ ...payload, password: raw.password });
+      : this.financeService.createUser(payload as any);
 
     request.subscribe({
       next: () => {
@@ -61,8 +61,6 @@ export class UsersPageComponent {
 
   edit(user: ManagedUser) {
     this.editingId.set(user.id);
-    this.form.controls.password.setValidators([Validators.minLength(8), Validators.maxLength(120)]);
-    this.form.controls.password.updateValueAndValidity({ emitEvent: false });
     this.form.reset({
       name: user.name,
       username: user.username,
@@ -75,9 +73,6 @@ export class UsersPageComponent {
     this.financeService.deleteUser(user.id).subscribe({
       next: () => {
         this.toastService.success('Usuário excluído com sucesso.');
-        if (this.editingId() === user.id) {
-          this.cancel();
-        }
         this.load();
       },
       error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao excluir usuário.')
@@ -86,13 +81,7 @@ export class UsersPageComponent {
 
   cancel() {
     this.editingId.set(null);
-    this.requirePassword();
     this.form.reset({ name: '', username: '', password: '', role: 'USER' });
-  }
-
-  private requirePassword() {
-    this.form.controls.password.setValidators([Validators.required, Validators.minLength(8), Validators.maxLength(120)]);
-    this.form.controls.password.updateValueAndValidity({ emitEvent: false });
   }
 
   private load() {
