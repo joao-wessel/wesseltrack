@@ -2,7 +2,7 @@
   - type: web
     name: wesseltrack-api
     runtime: docker
-    plan: starter
+    plan: free
     rootDir: backend
     dockerfilePath: ./Dockerfile
     healthCheckPath: /actuator/health
@@ -39,4 +39,5 @@
 databases:
   - name: wesseltrack-db
     databaseName: wesseltrack
-    plan: basic-256mb
+    plan: free
+

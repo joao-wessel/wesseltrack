@@ -57,9 +57,9 @@ Por padrão, o frontend lê `frontend/public/app-config.json` e usa:
 
 O repositório já inclui `render.yaml` com:
 
-- `wesseltrack-api`: Web Service Docker (Starter)
+- `wesseltrack-api`: Web Service Docker (Free)
 - `wesseltrack-web`: Static Site Angular
-- `wesseltrack-db`: Postgres gerenciado (Basic 256 MB)
+- `wesseltrack-db`: Postgres gerenciado (Free)
 
 ### Como publicar
 
@@ -83,7 +83,8 @@ O repositório já inclui `render.yaml` com:
 
 ### Observações
 
-- Em produção, use serviço pago no Render. A documentação atual do Render informa que o runtime nativo não inclui Java, então o backend foi preparado com Docker.
+- Em produção, use serviço pago no Render. A documentação atual do Render informa que o runtime nativo não inclui Java, então o backend foi preparado com Docker.`r`n- Mesmo em serviços Free, a Render pode exigir cartão para verificação/antiabuso em algumas contas.
 - O projeto ainda usa `spring.jpa.hibernate.ddl-auto=update` por praticidade. Para evolução segura em produção, o próximo passo recomendado é adotar migrações versionadas.`r`n- O frontend lê a URL da API em `app-config.json`, então o deploy não fica preso em `localhost`.
+
 
 
