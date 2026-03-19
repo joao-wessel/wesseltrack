@@ -57,7 +57,7 @@ Por padrão, o frontend lê `frontend/public/app-config.json` e usa:
 
 O repositório já inclui `render.yaml` com:
 
-- `wesseltrack-api`: Web Service Java (Starter)
+- `wesseltrack-api`: Web Service Docker (Starter)
 - `wesseltrack-web`: Static Site Angular
 - `wesseltrack-db`: Postgres gerenciado (Basic 256 MB)
 
@@ -66,8 +66,8 @@ O repositório já inclui `render.yaml` com:
 1. Suba este repositório para o GitHub.
 2. No Render, escolha `New +` > `Blueprint`.
 3. Selecione o repositório.
-4. Confirme a criação dos 3 recursos definidos no `render.yaml`.
-5. Aguarde o primeiro deploy.`r`n6. No primeiro acesso, crie o usuário administrador se o banco estiver vazio.
+4. Confirme a criação dos 3 recursos definidos no `render.yaml`.`r`n5. Durante a criação do Blueprint, informe manualmente:`r`n   - `API_BASE_URL`: URL pública da API com `/api` no final. Ex.: `https://wesseltrack-api.onrender.com/api``r`n   - `APP_CORS_ALLOWED_ORIGINS`: URL pública do frontend. Ex.: `https://wesseltrack-web.onrender.com`
+6. Aguarde o primeiro deploy.`r`n7. No primeiro acesso, crie o usuário administrador se o banco estiver vazio.
 
 ### O que o blueprint faz
 
@@ -83,6 +83,7 @@ O repositório já inclui `render.yaml` com:
 
 ### Observações
 
-- Em produção, use serviço pago no Render. Free Web Services hibernam e Free Postgres expira após 30 dias, segundo a documentação atual do Render.
+- Em produção, use serviço pago no Render. A documentação atual do Render informa que o runtime nativo não inclui Java, então o backend foi preparado com Docker.
 - O projeto ainda usa `spring.jpa.hibernate.ddl-auto=update` por praticidade. Para evolução segura em produção, o próximo passo recomendado é adotar migrações versionadas.`r`n- O frontend lê a URL da API em `app-config.json`, então o deploy não fica preso em `localhost`.
+
 
