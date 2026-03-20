@@ -37,7 +37,14 @@ public class DataSourceConfig {
 
     @Bean
     public HibernatePropertiesCustomizer hibernatePropertiesCustomizer(Environment environment) {
-        return properties -> properties.put("hibernate.dialect", resolveDialect(environment));
+        return properties -> {
+            String dialect = resolveDialect(environment);
+            if (dialect == null) {
+                properties.remove("hibernate.dialect");
+                return;
+            }
+            properties.put("hibernate.dialect", dialect);
+        };
     }
 
     private String resolveDialect(Environment environment) {
@@ -53,7 +60,7 @@ public class DataSourceConfig {
         );
 
         return resolveDatabaseSettings(configuredUrl, environment).jdbcUrl().startsWith("jdbc:postgresql:")
-                ? "org.hibernate.dialect.PostgreSQLDialect"
+                ? null
                 : "org.hibernate.community.dialect.SQLiteDialect";
     }
 

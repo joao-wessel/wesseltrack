@@ -1,13 +1,6 @@
 package com.financeapp.backend.security;
-
-import com.financeapp.backend.domain.AppUser;
 import lombok.Getter;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
-
-import java.util.Collection;
-import java.util.List;
 
 @Getter
 public class AuthenticatedUser {
@@ -31,13 +24,5 @@ public class AuthenticatedUser {
                 jwt.getClaim("name"),
                 jwt.getClaim("role")
         );
-    }
-
-    public static AuthenticatedUser fromUser(AppUser user) {
-        return new AuthenticatedUser(user.getId(), user.getUsername(), user.getName(), user.getRole().name());
-    }
-
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
 }
