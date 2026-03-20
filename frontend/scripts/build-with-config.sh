@@ -11,3 +11,4 @@ EOF
 
 npm ci
 npm run build
+
