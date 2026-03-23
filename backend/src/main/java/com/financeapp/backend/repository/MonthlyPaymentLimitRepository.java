@@ -12,4 +12,9 @@ import java.util.Optional;
 public interface MonthlyPaymentLimitRepository extends JpaRepository<MonthlyPaymentLimit, Long> {
     List<MonthlyPaymentLimit> findAllByUserAndMonthKey(AppUser user, YearMonth monthKey);
     Optional<MonthlyPaymentLimit> findByUserAndMonthKeyAndPaymentMethod(AppUser user, YearMonth monthKey, PaymentMethod paymentMethod);
+    Optional<MonthlyPaymentLimit> findTopByUserAndPaymentMethodAndMonthKeyLessThanEqualOrderByMonthKeyDesc(
+            AppUser user,
+            PaymentMethod paymentMethod,
+            YearMonth monthKey
+    );
 }

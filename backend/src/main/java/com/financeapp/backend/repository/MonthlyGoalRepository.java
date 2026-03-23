@@ -9,4 +9,5 @@ import java.util.Optional;
 
 public interface MonthlyGoalRepository extends JpaRepository<MonthlyGoal, Long> {
     Optional<MonthlyGoal> findByUserAndMonthKey(AppUser user, YearMonth monthKey);
+    Optional<MonthlyGoal> findTopByUserAndMonthKeyLessThanEqualOrderByMonthKeyDesc(AppUser user, YearMonth monthKey);
 }

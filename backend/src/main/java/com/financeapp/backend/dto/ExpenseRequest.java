@@ -15,6 +15,7 @@ public record ExpenseRequest(
         @NotNull @DecimalMin(value = "0.01") BigDecimal amount,
         @NotNull LocalDate dueDate,
         boolean recurring,
-        @Min(1) @Max(60) Integer installmentCount
+        @Min(1) @Max(60) Integer installmentCount,
+        boolean firstInstallmentNextMonth
 ) {
 }

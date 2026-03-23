@@ -6,7 +6,7 @@
     </div>
     <label class="month-filter">
       <span>Mês</span>
-      <input type="month" [value]="month()" (input)="changeMonth($any($event.target).value)" />
+      <input type="month" lang="pt-BR" [value]="month()" (input)="changeMonth($any($event.target).value)" />
     </label>
   </div>
 
@@ -18,15 +18,15 @@
 
     @if (activeTab() === 'monthly') {
       <div class="tab-content">
-        <form [formGroup]="monthlyForm" (ngSubmit)="saveMonthly()" class="panel inner-panel form-grid">
+        <form #activeFormPanel [formGroup]="monthlyForm" (ngSubmit)="saveMonthly()" class="panel inner-panel form-grid">
           <h3>Receita mensal</h3>
           <label><span>Descrição</span><input type="text" formControlName="description" placeholder="Descrição" /></label>
           <label><span>Valor</span><input #monthlyAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
-          <label><span>Data</span><input type="date" formControlName="receiveDate" /></label>
+          <label><span>Data</span><input type="date" lang="pt-BR" formControlName="receiveDate" /></label>
           <div class="actions"><button type="submit">Salvar receita mensal</button>@if (editingId() && !editingRecurring()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
         </form>
 
-        <article class="panel inner-panel list-panel">
+        <article class="panel inner-panel list-panel" [style.height.px]="panelHeight()" [style.maxHeight.px]="panelHeight()">
           <h3>Receitas mensais</h3>
           <div class="list">
             @for (income of monthlyIncomes(); track income.id) {
@@ -42,7 +42,7 @@
       </div>
     } @else {
       <div class="tab-content">
-        <form [formGroup]="fixedForm" (ngSubmit)="saveFixed()" class="panel inner-panel form-grid">
+        <form #activeFormPanel [formGroup]="fixedForm" (ngSubmit)="saveFixed()" class="panel inner-panel form-grid">
           <h3>Receita fixa</h3>
           <label><span>Descrição</span><input type="text" formControlName="description" placeholder="Descrição" /></label>
           <label><span>Valor</span><input #fixedAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
@@ -50,7 +50,7 @@
           <div class="actions"><button type="submit">Salvar receita fixa</button>@if (editingId() && editingRecurring()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
         </form>
 
-        <article class="panel inner-panel list-panel">
+        <article class="panel inner-panel list-panel" [style.height.px]="panelHeight()" [style.maxHeight.px]="panelHeight()">
           <h3>Receitas fixas</h3>
           <div class="list">
             @for (income of recurringIncomes(); track income.id) {

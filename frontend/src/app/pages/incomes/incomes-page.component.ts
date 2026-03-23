@@ -1,7 +1,8 @@
-﻿import { Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FinanceService } from '../../core/finance.service';
+import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { ToastService } from '../../core/toast.service';
 import { Income } from '../../core/models';
 import { CurrencyMaskDirective } from '../../core/currency-mask.directive';
@@ -12,19 +13,28 @@ import { CurrencyMaskDirective } from '../../core/currency-mask.directive';
   templateUrl: './incomes-page.component.html',
   styleUrl: './incomes-page.component.scss'
 })
-export class IncomesPageComponent {
+export class IncomesPageComponent implements OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly financeService = inject(FinanceService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly toastService = inject(ToastService);
+  private resizeObserver?: ResizeObserver;
+  private activeFormPanelElement?: HTMLElement;
 
   @ViewChild('monthlyAmountInput') private monthlyAmountInput?: ElementRef<HTMLInputElement>;
   @ViewChild('fixedAmountInput') private fixedAmountInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('activeFormPanel')
+  set activeFormPanel(elementRef: ElementRef<HTMLElement> | undefined) {
+    this.activeFormPanelElement = elementRef?.nativeElement;
+    this.observeActiveFormPanel();
+  }
 
   readonly month = signal(this.toYearMonth(new Date()));
   readonly incomes = signal<Income[]>([]);
   readonly editingId = signal<number | null>(null);
   readonly editingRecurring = signal(false);
   readonly activeTab = signal<'monthly' | 'fixed'>('monthly');
+  readonly panelHeight = signal<number | null>(null);
 
   readonly monthlyForm = this.fb.nonNullable.group({
     description: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(120)]),
@@ -43,6 +53,10 @@ export class IncomesPageComponent {
 
   constructor() {
     this.load();
+  }
+
+  ngOnDestroy() {
+    this.resizeObserver?.disconnect();
   }
 
   changeMonth(value: string) {
@@ -129,8 +143,20 @@ export class IncomesPageComponent {
     }
   }
 
-  remove(item: Income) {
-    this.financeService.deleteIncome(item.id).subscribe({
+  async remove(item: Income) {
+    const confirmed = await this.confirmDialog.open({
+      title: 'Excluir receita',
+      message: `Confirma a exclusão de "${item.description}"? Esta ação não poderá ser desfeita.`,
+      confirmLabel: 'Excluir',
+      cancelLabel: 'Cancelar',
+      variant: 'danger'
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.financeService.deleteIncome(item.id, item.recurring ? this.month() : undefined).subscribe({
       next: () => {
         this.toastService.success('Receita excluída com sucesso.');
         this.load();
@@ -193,5 +219,22 @@ export class IncomesPageComponent {
         maximumFractionDigits: 2
       }).format(value);
     }, 0);
+  }
+
+  private observeActiveFormPanel() {
+    this.resizeObserver?.disconnect();
+
+    if (!this.activeFormPanelElement) {
+      this.panelHeight.set(null);
+      return;
+    }
+
+    const updateHeight = () => {
+      this.panelHeight.set(this.activeFormPanelElement?.getBoundingClientRect().height ?? null);
+    };
+
+    updateHeight();
+    this.resizeObserver = new ResizeObserver(() => updateHeight());
+    this.resizeObserver.observe(this.activeFormPanelElement);
   }
 }

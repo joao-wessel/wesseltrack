@@ -1,6 +1,7 @@
 ﻿import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ConfirmDialogService } from '../../../core/confirm-dialog.service';
 import { FinanceService } from '../../../core/finance.service';
 import { Category } from '../../../core/models';
 import { ToastService } from '../../../core/toast.service';
@@ -13,6 +14,7 @@ import { ToastService } from '../../../core/toast.service';
 })
 export class CategoriesPageComponent {
   private readonly fb = inject(FormBuilder);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly financeService = inject(FinanceService);
   private readonly toastService = inject(ToastService);
 
@@ -53,7 +55,19 @@ export class CategoriesPageComponent {
     this.form.patchValue(category);
   }
 
-  remove(category: Category) {
+  async remove(category: Category) {
+    const confirmed = await this.confirmDialog.open({
+      title: 'Excluir categoria',
+      message: `Confirma a exclusão da categoria "${category.name}"? Esta ação não poderá ser desfeita.`,
+      confirmLabel: 'Excluir',
+      cancelLabel: 'Cancelar',
+      variant: 'danger'
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
     this.financeService.deleteCategory(category.id).subscribe({
       next: () => {
         this.toastService.success('Categoria excluída com sucesso.');

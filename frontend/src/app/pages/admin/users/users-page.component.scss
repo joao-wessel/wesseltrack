@@ -24,3 +24,39 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
   .split > .panel { height: auto; min-height: 0; }
   .list { max-height: 24rem; }
 }
+
+@media (max-width: 720px) {
+  .panel {
+    padding: 1rem;
+    border-radius: 1.2rem;
+  }
+
+  .list {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    height: auto;
+    gap: 0.8rem;
+    padding: 0.9rem;
+  }
+
+  .inline-actions,
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+
+  .pill,
+  .inline-actions button,
+  .actions button {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}

@@ -25,6 +25,25 @@ export class LoginPageComponent {
     private readonly router: Router
   ) {}
 
+  hasError(controlName: 'username' | 'password') {
+    const control = this.loginForm.controls[controlName];
+    return control.invalid && (control.touched || control.dirty);
+  }
+
+  getErrorMessage(controlName: 'username' | 'password') {
+    const control = this.loginForm.controls[controlName];
+
+    if (control.hasError('required')) {
+      return controlName === 'username' ? 'Informe o usuário.' : 'Informe a senha.';
+    }
+
+    if (controlName === 'password' && control.hasError('minlength')) {
+      return 'A senha deve ter pelo menos 8 caracteres.';
+    }
+
+    return '';
+  }
+
   submitLogin() {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();

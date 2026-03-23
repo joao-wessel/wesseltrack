@@ -105,4 +105,47 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
   .pie-chart { width: min(100%, 220px); }
   .indicator-main,
   .indicator-progress-labels { grid-template-columns: 1fr; display: grid; }
+
+  .header-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .header-actions button,
+  .month-pill {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .panel {
+    padding: 1rem;
+    border-radius: 1.2rem;
+  }
+
+  .summary-grid {
+    gap: 0.75rem;
+  }
+
+  .legend-row {
+    gap: 0.6rem;
+    padding: 0.85rem;
+  }
+
+  .legend-row > strong {
+    justify-self: start;
+  }
+
+  .payment-card {
+    padding: 0.9rem;
+  }
+
+  .indicator-value {
+    font-size: 1.5rem;
+  }
+
+  .status-pill {
+    width: fit-content;
+  }
 }

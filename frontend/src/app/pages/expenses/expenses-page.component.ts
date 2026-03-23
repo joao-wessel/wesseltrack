@@ -1,7 +1,8 @@
-﻿import { Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FinanceService } from '../../core/finance.service';
+import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { ToastService } from '../../core/toast.service';
 import { Category, Expense } from '../../core/models';
 import { CurrencyMaskDirective } from '../../core/currency-mask.directive';
@@ -12,14 +13,22 @@ import { CurrencyMaskDirective } from '../../core/currency-mask.directive';
   templateUrl: './expenses-page.component.html',
   styleUrl: './expenses-page.component.scss'
 })
-export class ExpensesPageComponent {
+export class ExpensesPageComponent implements OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly financeService = inject(FinanceService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly toastService = inject(ToastService);
+  private resizeObserver?: ResizeObserver;
+  private activeFormPanelElement?: HTMLElement;
 
   @ViewChild('quickAmountInput') private quickAmountInput?: ElementRef<HTMLInputElement>;
   @ViewChild('fixedAmountInput') private fixedAmountInput?: ElementRef<HTMLInputElement>;
   @ViewChild('installmentAmountInput') private installmentAmountInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('activeFormPanel')
+  set activeFormPanel(elementRef: ElementRef<HTMLElement> | undefined) {
+    this.activeFormPanelElement = elementRef?.nativeElement;
+    this.observeActiveFormPanel();
+  }
 
   readonly month = signal(this.toYearMonth(new Date()));
   readonly expenses = signal<Expense[]>([]);
@@ -27,6 +36,7 @@ export class ExpensesPageComponent {
   readonly editingId = signal<number | null>(null);
   readonly editingMode = signal<'quick' | 'fixed' | 'installment' | null>(null);
   readonly activeTab = signal<'quick' | 'fixed' | 'installment'>('quick');
+  readonly panelHeight = signal<number | null>(null);
 
   readonly quickForm = this.fb.nonNullable.group({
     description: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(140)]),
@@ -49,7 +59,8 @@ export class ExpensesPageComponent {
     categoryId: this.fb.control<number | null>(null, [Validators.required, Validators.min(1)]),
     amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
     dueDate: this.fb.nonNullable.control('', Validators.required),
-    installmentCount: this.fb.control<number | null>(null, [Validators.required, Validators.min(1), Validators.max(60)])
+    installmentCount: this.fb.control<number | null>(null, [Validators.required, Validators.min(1), Validators.max(60)]),
+    firstInstallmentNextMonth: this.fb.nonNullable.control(false)
   });
 
   readonly quickExpenses = computed(() => this.expenses().filter((item) => item.type === 'VARIABLE'));
@@ -58,6 +69,10 @@ export class ExpensesPageComponent {
 
   constructor() {
     this.load();
+  }
+
+  ngOnDestroy() {
+    this.resizeObserver?.disconnect();
   }
 
   changeMonth(value: string) {
@@ -83,7 +98,12 @@ export class ExpensesPageComponent {
       return;
     }
 
-    const payload = { ...this.fixedForm.getRawValue(), type: 'FIXED', recurring: true };
+    const payload = {
+      ...this.fixedForm.getRawValue(),
+      dueDate: this.referenceDateForSelectedMonth(this.fixedForm.getRawValue().dueDate),
+      type: 'FIXED',
+      recurring: true
+    };
     this.saveExpense(payload as any, 'fixed', 'Despesa fixa salva com sucesso.');
   }
 
@@ -142,13 +162,26 @@ export class ExpensesPageComponent {
       categoryId: category?.id ?? null,
       amount: item.originalAmount,
       dueDate: item.dueDate,
-      installmentCount: item.installmentCount
+      installmentCount: item.installmentCount,
+      firstInstallmentNextMonth: false
     });
     this.syncMaskedInput(this.installmentAmountInput, item.originalAmount);
   }
 
-  remove(item: Expense) {
-    this.financeService.deleteExpense(item.id).subscribe({
+  async remove(item: Expense) {
+    const confirmed = await this.confirmDialog.open({
+      title: 'Excluir despesa',
+      message: `Confirma a exclusão de "${item.description}"? Esta ação não poderá ser desfeita.`,
+      confirmLabel: 'Excluir',
+      cancelLabel: 'Cancelar',
+      variant: 'danger'
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.financeService.deleteExpense(item.id, item.recurring ? this.month() : undefined).subscribe({
       next: () => {
         this.toastService.success('Despesa excluída com sucesso.');
         this.load();
@@ -162,7 +195,7 @@ export class ExpensesPageComponent {
     this.editingMode.set(null);
     this.quickForm.reset({ description: '', categoryId: null, paymentMethod: 'DEBIT', amount: null, dueDate: '' });
     this.fixedForm.reset({ description: '', categoryId: null, paymentMethod: 'DEBIT', amount: null, dueDate: '' });
-    this.installmentForm.reset({ description: '', categoryId: null, amount: null, dueDate: '', installmentCount: null });
+    this.installmentForm.reset({ description: '', categoryId: null, amount: null, dueDate: '', installmentCount: null, firstInstallmentNextMonth: false });
   }
 
   selectTab(tab: 'quick' | 'fixed' | 'installment') {
@@ -221,6 +254,13 @@ export class ExpensesPageComponent {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   }
 
+  private referenceDateForSelectedMonth(dateValue: string): string {
+    const referenceDate = dateValue ? new Date(`${dateValue}T00:00:00`) : new Date();
+    const [year, month] = this.month().split('-').map(Number);
+    const day = Math.min(referenceDate.getDate(), new Date(year, month, 0).getDate());
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
   private syncMaskedInput(inputRef: ElementRef<HTMLInputElement> | undefined, value: number | null) {
     setTimeout(() => {
       if (!inputRef) {
@@ -237,5 +277,22 @@ export class ExpensesPageComponent {
         maximumFractionDigits: 2
       }).format(value);
     }, 0);
+  }
+
+  private observeActiveFormPanel() {
+    this.resizeObserver?.disconnect();
+
+    if (!this.activeFormPanelElement) {
+      this.panelHeight.set(null);
+      return;
+    }
+
+    const updateHeight = () => {
+      this.panelHeight.set(this.activeFormPanelElement?.getBoundingClientRect().height ?? null);
+    };
+
+    updateHeight();
+    this.resizeObserver = new ResizeObserver(() => updateHeight());
+    this.resizeObserver.observe(this.activeFormPanelElement);
   }
 }

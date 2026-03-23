@@ -1,0 +1,27 @@
+@if (confirmDialog.state().open) {
+  <div class="modal-backdrop" (click)="confirmDialog.cancel()">
+    <section class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>{{ confirmDialog.state().title }}</h2>
+          <p>{{ confirmDialog.state().message }}</p>
+        </div>
+        <button type="button" class="icon-button subtle" (click)="confirmDialog.cancel()" aria-label="Fechar modal">×</button>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="ghost" (click)="confirmDialog.cancel()">
+          {{ confirmDialog.state().cancelLabel }}
+        </button>
+        <button
+          type="button"
+          class="primary-action"
+          [class.danger-action]="confirmDialog.state().variant === 'danger'"
+          (click)="confirmDialog.confirm()"
+        >
+          {{ confirmDialog.state().confirmLabel }}
+        </button>
+      </div>
+    </section>
+  </div>
+}

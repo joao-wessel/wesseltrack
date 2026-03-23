@@ -37,7 +37,10 @@ public class IncomeController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        incomeService.delete(id);
+    public void delete(
+            @PathVariable Long id,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth effectiveMonth
+    ) {
+        incomeService.delete(id, effectiveMonth == null ? YearMonth.now() : effectiveMonth);
     }
 }

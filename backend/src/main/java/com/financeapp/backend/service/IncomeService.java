@@ -35,6 +35,10 @@ public class IncomeService {
         }
 
         for (Income income : recurring) {
+            if (!isRecurringActiveForMonth(income, month)) {
+                continue;
+            }
+
             if (!income.getReceiveDate().isBefore(month.atDay(1))) {
                 continue;
             }
@@ -64,16 +68,54 @@ public class IncomeService {
     public IncomeResponse update(Long id, IncomeRequest request) {
         AppUser user = currentUserService.requireCurrentUser();
         Income income = incomeRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new EntityNotFoundException("Receita não encontrada."));
+                .orElseThrow(() -> new EntityNotFoundException("Receita nÃ£o encontrada."));
+
+        if (income.isRecurring() && request.recurring()) {
+            return updateRecurringIncome(income, request);
+        }
+
         income = buildIncome(income, request);
         return map(incomeRepository.save(income));
     }
 
-    public void delete(Long id) {
+    public void delete(Long id, YearMonth effectiveMonth) {
         AppUser user = currentUserService.requireCurrentUser();
         Income income = incomeRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new EntityNotFoundException("Receita não encontrada."));
-        incomeRepository.delete(income);
+                .orElseThrow(() -> new EntityNotFoundException("Receita nÃ£o encontrada."));
+
+        if (!income.isRecurring()) {
+            incomeRepository.delete(income);
+            return;
+        }
+
+        LocalDate effectiveStart = effectiveMonth.atDay(1);
+        if (!effectiveStart.isAfter(income.getReceiveDate())) {
+            incomeRepository.delete(income);
+            return;
+        }
+
+        income.setEndDate(effectiveStart.minusDays(1));
+        incomeRepository.save(income);
+    }
+
+    private IncomeResponse updateRecurringIncome(Income income, IncomeRequest request) {
+        Income updatedVersion = buildIncome(Income.builder().user(income.getUser()).build(), request);
+        LocalDate effectiveStart = updatedVersion.getReceiveDate();
+        LocalDate originalStart = income.getReceiveDate();
+
+        if (!effectiveStart.isAfter(originalStart)) {
+            income.setDescription(updatedVersion.getDescription());
+            income.setAmount(updatedVersion.getAmount());
+            income.setReceiveDate(updatedVersion.getReceiveDate());
+            income.setExpectedDay(updatedVersion.getExpectedDay());
+            income.setRecurring(true);
+            return map(incomeRepository.save(income));
+        }
+
+        updatedVersion.setEndDate(income.getEndDate());
+        income.setEndDate(effectiveStart.minusDays(1));
+        incomeRepository.save(income);
+        return map(incomeRepository.save(updatedVersion));
     }
 
     private Income buildIncome(Income income, IncomeRequest request) {
@@ -94,6 +136,7 @@ public class IncomeService {
             income.setDescription(request.description().trim());
             income.setAmount(request.amount());
             income.setReceiveDate(referenceDate);
+            income.setEndDate(null);
             income.setExpectedDay(expectedDay);
             income.setRecurring(true);
             return income;
@@ -106,9 +149,17 @@ public class IncomeService {
         income.setDescription(request.description().trim());
         income.setAmount(request.amount());
         income.setReceiveDate(request.receiveDate());
+        income.setEndDate(null);
         income.setExpectedDay(request.receiveDate().getDayOfMonth());
         income.setRecurring(false);
         return income;
+    }
+
+    private boolean isRecurringActiveForMonth(Income income, YearMonth month) {
+        LocalDate monthStart = month.atDay(1);
+        LocalDate monthEnd = month.atEndOfMonth();
+        return !income.getReceiveDate().isAfter(monthEnd)
+                && (income.getEndDate() == null || !income.getEndDate().isBefore(monthStart));
     }
 
     private IncomeResponse map(Income income) {

@@ -6,7 +6,7 @@
     </div>
     <label class="month-filter">
       <span>Mês</span>
-      <input type="month" [value]="month()" (input)="changeMonth($any($event.target).value)" />
+      <input type="month" lang="pt-BR" [value]="month()" (input)="changeMonth($any($event.target).value)" />
     </label>
   </div>
 
@@ -19,17 +19,17 @@
 
     @if (activeTab() === 'quick') {
       <div class="tab-content">
-        <form [formGroup]="quickForm" (ngSubmit)="saveQuick()" class="panel inner-panel form-grid">
+        <form #activeFormPanel [formGroup]="quickForm" (ngSubmit)="saveQuick()" class="panel inner-panel form-grid">
           <h3>Lançamento rápido</h3>
           <label><span>Descrição</span><input type="text" formControlName="description" placeholder="Descrição" /></label>
           <label><span>Categoria</span><select formControlName="categoryId"><option [ngValue]="null">Selecione</option>@for (category of categories(); track category.id) { <option [ngValue]="category.id">{{ category.name }}</option> }</select></label>
           <label><span>Forma de pagamento</span><select formControlName="paymentMethod"><option value="DEBIT">Débito</option><option value="CREDIT">Crédito</option><option value="PIX">PIX</option><option value="CASH">Dinheiro</option></select></label>
           <label><span>Valor</span><input #quickAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
-          <label><span>Data</span><input type="date" formControlName="dueDate" /></label>
+          <label><span>Data</span><input type="date" lang="pt-BR" formControlName="dueDate" /></label>
           <div class="actions"><button type="submit">Salvar rápida</button>@if (editingId() && editingMode()==='quick') { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
         </form>
 
-        <article class="panel inner-panel list-panel">
+        <article class="panel inner-panel list-panel" [style.height.px]="panelHeight()" [style.maxHeight.px]="panelHeight()">
           <h3>Lançamentos rápidos</h3>
           <div class="list">
             @for (expense of quickExpenses(); track expense.id) {
@@ -42,17 +42,17 @@
       </div>
     } @else if (activeTab() === 'fixed') {
       <div class="tab-content">
-        <form [formGroup]="fixedForm" (ngSubmit)="saveFixed()" class="panel inner-panel form-grid">
+        <form #activeFormPanel [formGroup]="fixedForm" (ngSubmit)="saveFixed()" class="panel inner-panel form-grid">
           <h3>Despesa fixa</h3>
           <label><span>Descrição</span><input type="text" formControlName="description" placeholder="Descrição" /></label>
           <label><span>Categoria</span><select formControlName="categoryId"><option [ngValue]="null">Selecione</option>@for (category of categories(); track category.id) { <option [ngValue]="category.id">{{ category.name }}</option> }</select></label>
           <label><span>Forma de pagamento</span><select formControlName="paymentMethod"><option value="DEBIT">Débito</option><option value="CREDIT">Crédito</option><option value="PIX">PIX</option><option value="CASH">Dinheiro</option></select></label>
           <label><span>Valor</span><input #fixedAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
-          <label><span>Data base</span><input type="date" formControlName="dueDate" /></label>
+          <label><span>Data base</span><input type="date" lang="pt-BR" formControlName="dueDate" /></label>
           <div class="actions"><button type="submit">Salvar fixa</button>@if (editingId() && editingMode()==='fixed') { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
         </form>
 
-        <article class="panel inner-panel list-panel">
+        <article class="panel inner-panel list-panel" [style.height.px]="panelHeight()" [style.maxHeight.px]="panelHeight()">
           <h3>Despesas fixas</h3>
           <div class="list">
             @for (expense of fixedExpenses(); track expense.id) {
@@ -65,18 +65,25 @@
       </div>
     } @else {
       <div class="tab-content">
-        <form [formGroup]="installmentForm" (ngSubmit)="saveInstallment()" class="panel inner-panel form-grid">
+        <form #activeFormPanel [formGroup]="installmentForm" (ngSubmit)="saveInstallment()" class="panel inner-panel form-grid">
           <h3>Compra parcelada</h3>
           <label><span>Descrição</span><input type="text" formControlName="description" placeholder="Descrição" /></label>
           <label><span>Categoria</span><select formControlName="categoryId"><option [ngValue]="null">Selecione</option>@for (category of categories(); track category.id) { <option [ngValue]="category.id">{{ category.name }}</option> }</select></label>
           <label><span>Forma de pagamento</span><input type="text" value="Crédito" disabled /></label>
           <label><span>Valor da compra</span><input #installmentAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
-          <label><span>Data da compra</span><input type="date" formControlName="dueDate" /></label>
+          <label><span>Data da compra</span><input type="date" lang="pt-BR" formControlName="dueDate" /></label>
           <label><span>Quantidade de parcelas</span><input type="number" formControlName="installmentCount" placeholder="Parcelas" /></label>
+          <label>
+            <span>Primeira parcela</span>
+            <select formControlName="firstInstallmentNextMonth">
+              <option [ngValue]="false">Entra neste mês</option>
+              <option [ngValue]="true">Entra no próximo mês</option>
+            </select>
+          </label>
           <div class="actions"><button type="submit">Salvar parcelada</button>@if (editingId() && editingMode()==='installment') { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
         </form>
 
-        <article class="panel inner-panel list-panel">
+        <article class="panel inner-panel list-panel" [style.height.px]="panelHeight()" [style.maxHeight.px]="panelHeight()">
           <h3>Compras parceladas</h3>
           <div class="list">
             @for (expense of installmentExpenses(); track expense.id) {

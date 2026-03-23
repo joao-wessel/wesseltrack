@@ -8,3 +8,17 @@ input, button { height: 3rem; border-radius: 0.95rem; font: inherit; }
 input { border: 1px solid #cbd5e1; padding: 0 1rem; }
 button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weight: 700; }
 .error { color: #b91c1c; font-weight: 500; }
+@media (max-width: 720px) {
+  .panel {
+    padding: 1rem;
+    border-radius: 1.2rem;
+  }
+
+  .form-grid {
+    max-width: none;
+  }
+
+  button {
+    width: 100%;
+  }
+}

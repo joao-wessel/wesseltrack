@@ -37,7 +37,10 @@ public class ExpenseController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        expenseService.delete(id);
+    public void delete(
+            @PathVariable Long id,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth effectiveMonth
+    ) {
+        expenseService.delete(id, effectiveMonth == null ? YearMonth.now() : effectiveMonth);
     }
 }

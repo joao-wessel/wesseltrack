@@ -1,6 +1,7 @@
 ﻿import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ConfirmDialogService } from '../../../core/confirm-dialog.service';
 import { FinanceService } from '../../../core/finance.service';
 import { ManagedUser } from '../../../core/models';
 import { ToastService } from '../../../core/toast.service';
@@ -13,6 +14,7 @@ import { ToastService } from '../../../core/toast.service';
 })
 export class UsersPageComponent {
   private readonly fb = inject(FormBuilder);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly financeService = inject(FinanceService);
   private readonly toastService = inject(ToastService);
 
@@ -69,7 +71,19 @@ export class UsersPageComponent {
     });
   }
 
-  remove(user: ManagedUser) {
+  async remove(user: ManagedUser) {
+    const confirmed = await this.confirmDialog.open({
+      title: 'Excluir usuário',
+      message: `Confirma a exclusão do usuário "${user.username}"? Esta ação não poderá ser desfeita.`,
+      confirmLabel: 'Excluir',
+      cancelLabel: 'Cancelar',
+      variant: 'danger'
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
     this.financeService.deleteUser(user.id).subscribe({
       next: () => {
         this.toastService.success('Usuário excluído com sucesso.');

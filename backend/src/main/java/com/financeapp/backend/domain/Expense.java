@@ -50,6 +50,9 @@ public class Expense {
     @Column(nullable = false)
     private LocalDate dueDate;
 
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
     @Column(nullable = false)
     private boolean recurring;
 

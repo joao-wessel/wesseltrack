@@ -39,6 +39,10 @@ public class ExpenseService {
 
         List<ExpenseResponse> responses = new ArrayList<>(actual.stream().map(this::map).toList());
         for (Expense expense : recurringFixed) {
+            if (!isRecurringActiveForMonth(expense, month)) {
+                continue;
+            }
+
             if (!expense.getDueDate().isBefore(month.atDay(1))) {
                 continue;
             }
@@ -95,6 +99,7 @@ public class ExpenseService {
                 .originalAmount(request.amount())
                 .description(request.description().trim())
                 .dueDate(request.dueDate())
+                .endDate(null)
                 .recurring(request.type() == ExpenseType.FIXED && request.recurring())
                 .installmentNumber(1)
                 .installmentCount(1)
@@ -105,13 +110,17 @@ public class ExpenseService {
     public ExpenseResponse update(Long id, ExpenseRequest request) {
         AppUser user = currentUserService.requireCurrentUser();
         Expense expense = expenseRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new EntityNotFoundException("Despesa não encontrada."));
+                .orElseThrow(() -> new EntityNotFoundException("Despesa nÃ£o encontrada."));
 
         if (expense.getType() == ExpenseType.INSTALLMENT && expense.getInstallmentCount() > 1) {
-            throw new IllegalArgumentException("Edite parcelas individualmente apenas quando necessário. O lote parcelado não é recalculado retroativamente.");
+            throw new IllegalArgumentException("Edite parcelas individualmente apenas quando necessÃ¡rio. O lote parcelado nÃ£o Ã© recalculado retroativamente.");
         }
 
         Category category = requireCategory(request, user);
+        if (expense.isRecurring() && expense.getType() == ExpenseType.FIXED && request.type() == ExpenseType.FIXED && request.recurring()) {
+            return updateRecurringFixedExpense(expense, request, category);
+        }
+
         expense.setCategory(category);
         expense.setType(request.type());
         expense.setPaymentMethod(request.paymentMethod());
@@ -120,6 +129,7 @@ public class ExpenseService {
         expense.setOriginalAmount(request.type() == ExpenseType.INSTALLMENT ? expense.getOriginalAmount() : request.amount());
         expense.setDescription(request.description().trim());
         expense.setDueDate(request.dueDate());
+        expense.setEndDate(null);
         expense.setRecurring(request.type() == ExpenseType.FIXED && request.recurring());
 
         if (request.type() != ExpenseType.INSTALLMENT) {
@@ -131,15 +141,68 @@ public class ExpenseService {
         return map(expenseRepository.save(expense));
     }
 
-    public void delete(Long id) {
+    public void delete(Long id, YearMonth effectiveMonth) {
         AppUser user = currentUserService.requireCurrentUser();
         Expense expense = expenseRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new EntityNotFoundException("Despesa não encontrada."));
-        expenseRepository.delete(expense);
+                .orElseThrow(() -> new EntityNotFoundException("Despesa nÃ£o encontrada."));
+
+        if (!(expense.isRecurring() && expense.getType() == ExpenseType.FIXED)) {
+            expenseRepository.delete(expense);
+            return;
+        }
+
+        LocalDate effectiveStart = effectiveMonth.atDay(1);
+        if (!effectiveStart.isAfter(expense.getDueDate())) {
+            expenseRepository.delete(expense);
+            return;
+        }
+
+        expense.setEndDate(effectiveStart.minusDays(1));
+        expenseRepository.save(expense);
+    }
+
+    private ExpenseResponse updateRecurringFixedExpense(Expense expense, ExpenseRequest request, Category category) {
+        LocalDate effectiveStart = request.dueDate();
+        LocalDate originalStart = expense.getDueDate();
+
+        if (!effectiveStart.isAfter(originalStart)) {
+            expense.setCategory(category);
+            expense.setPaymentMethod(request.paymentMethod());
+            expense.setPaymentSource(derivePaymentSource(request.paymentMethod()));
+            expense.setAmount(request.amount());
+            expense.setOriginalAmount(request.amount());
+            expense.setDescription(request.description().trim());
+            expense.setDueDate(request.dueDate());
+            expense.setRecurring(true);
+            return map(expenseRepository.save(expense));
+        }
+
+        Expense updatedVersion = Expense.builder()
+                .user(expense.getUser())
+                .category(category)
+                .type(ExpenseType.FIXED)
+                .paymentMethod(request.paymentMethod())
+                .paymentSource(derivePaymentSource(request.paymentMethod()))
+                .amount(request.amount())
+                .originalAmount(request.amount())
+                .description(request.description().trim())
+                .dueDate(request.dueDate())
+                .endDate(expense.getEndDate())
+                .recurring(true)
+                .installmentNumber(1)
+                .installmentCount(1)
+                .build();
+
+        expense.setEndDate(effectiveStart.minusDays(1));
+        expenseRepository.save(expense);
+        return map(expenseRepository.save(updatedVersion));
     }
 
     private List<ExpenseResponse> createInstallments(ExpenseRequest request, AppUser user, Category category) {
         int installmentCount = request.installmentCount() == null ? 1 : request.installmentCount();
+        LocalDate firstInstallmentDate = request.firstInstallmentNextMonth()
+                ? request.dueDate().plusMonths(1)
+                : request.dueDate();
         BigDecimal[] division = request.amount().divideAndRemainder(BigDecimal.valueOf(installmentCount));
         BigDecimal baseInstallment = division[0].setScale(2, RoundingMode.DOWN);
         BigDecimal totalAssigned = baseInstallment.multiply(BigDecimal.valueOf(installmentCount));
@@ -162,7 +225,8 @@ public class ExpenseService {
                     .amount(installmentAmount)
                     .originalAmount(request.amount())
                     .description(request.description().trim())
-                    .dueDate(request.dueDate().plusMonths(i))
+                    .dueDate(firstInstallmentDate.plusMonths(i))
+                    .endDate(null)
                     .recurring(false)
                     .installmentNumber(i + 1)
                     .installmentCount(installmentCount)
@@ -197,7 +261,7 @@ public class ExpenseService {
             if (request.type() == ExpenseType.VARIABLE) {
                 return categoryService.findOrCreateUncategorized(user);
             }
-            throw new IllegalArgumentException("Categoria obrigatória para despesas fixas e parceladas.");
+            throw new IllegalArgumentException("Categoria obrigatÃ³ria para despesas fixas e parceladas.");
         }
 
         return categoryService.requireOwnedCategory(request.categoryId(), user);
@@ -205,10 +269,17 @@ public class ExpenseService {
 
     private String derivePaymentSource(PaymentMethod paymentMethod) {
         return switch (paymentMethod) {
-            case CREDIT -> "Crédito";
-            case DEBIT -> "Débito";
+            case CREDIT -> "CrÃ©dito";
+            case DEBIT -> "DÃ©bito";
             case PIX -> "PIX";
             case CASH -> "Dinheiro";
         };
+    }
+
+    private boolean isRecurringActiveForMonth(Expense expense, YearMonth month) {
+        LocalDate monthStart = month.atDay(1);
+        LocalDate monthEnd = month.atEndOfMonth();
+        return !expense.getDueDate().isAfter(monthEnd)
+                && (expense.getEndDate() == null || !expense.getEndDate().isBefore(monthStart));
     }
 }

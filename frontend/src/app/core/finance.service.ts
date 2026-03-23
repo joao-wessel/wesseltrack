@@ -1,4 +1,4 @@
-﻿import { Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DashboardSummary, Category, Expense, Income, ManagedUser, PlanningSettings } from './models';
 import { RUNTIME_CONFIG } from './runtime-config';
@@ -42,8 +42,10 @@ export class FinanceService {
     return this.http.put<Income>(`${this.apiUrl}/incomes/${id}`, payload);
   }
 
-  deleteIncome(id: number) {
-    return this.http.delete<void>(`${this.apiUrl}/incomes/${id}`);
+  deleteIncome(id: number, effectiveMonth?: string) {
+    return this.http.delete<void>(`${this.apiUrl}/incomes/${id}`, {
+      params: effectiveMonth ? { effectiveMonth } : {}
+    });
   }
 
   getExpenses(month: string) {
@@ -59,6 +61,7 @@ export class FinanceService {
     dueDate: string;
     recurring: boolean;
     installmentCount?: number;
+    firstInstallmentNextMonth?: boolean;
   }) {
     return this.http.post<Expense[]>(`${this.apiUrl}/expenses`, payload);
   }
@@ -72,12 +75,15 @@ export class FinanceService {
     dueDate: string;
     recurring: boolean;
     installmentCount?: number;
+    firstInstallmentNextMonth?: boolean;
   }) {
     return this.http.put<Expense>(`${this.apiUrl}/expenses/${id}`, payload);
   }
 
-  deleteExpense(id: number) {
-    return this.http.delete<void>(`${this.apiUrl}/expenses/${id}`);
+  deleteExpense(id: number, effectiveMonth?: string) {
+    return this.http.delete<void>(`${this.apiUrl}/expenses/${id}`, {
+      params: effectiveMonth ? { effectiveMonth } : {}
+    });
   }
 
   getPlanningSettings() {

@@ -22,7 +22,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GoalService {
 
-    private static final YearMonth SETTINGS_MONTH = YearMonth.of(2000, 1);
+    private static final YearMonth LEGACY_SETTINGS_MONTH = YearMonth.of(2000, 1);
 
     private final MonthlyGoalRepository monthlyGoalRepository;
     private final MonthlyPaymentLimitRepository monthlyPaymentLimitRepository;
@@ -30,9 +30,7 @@ public class GoalService {
 
     public BigDecimal getGoal(YearMonth month) {
         AppUser user = currentUserService.requireCurrentUser();
-        return monthlyGoalRepository.findByUserAndMonthKey(user, month)
-                .map(MonthlyGoal::getAmount)
-                .orElse(BigDecimal.ZERO);
+        return resolveGoalAmount(user, month);
     }
 
     public BigDecimal save(MonthlyGoalRequest request) {
@@ -45,8 +43,8 @@ public class GoalService {
 
     public MonthlyPlanningResponse getPlanning(YearMonth month) {
         AppUser user = currentUserService.requireCurrentUser();
-        BigDecimal goalAmount = getGoal(SETTINGS_MONTH);
-        Map<PaymentMethod, BigDecimal> limits = loadLimits(user, SETTINGS_MONTH);
+        BigDecimal goalAmount = resolveGoalAmount(user, month);
+        Map<PaymentMethod, BigDecimal> limits = loadLimits(user, month);
 
         return new MonthlyPlanningResponse(
                 month,
@@ -60,19 +58,28 @@ public class GoalService {
 
     public PlanningSettingsResponse getSettings() {
         AppUser user = currentUserService.requireCurrentUser();
-        BigDecimal goalAmount = getGoal(SETTINGS_MONTH);
-        Map<PaymentMethod, BigDecimal> limits = loadLimits(user, SETTINGS_MONTH);
+        YearMonth currentMonth = YearMonth.now();
+        BigDecimal goalAmount = resolveGoalAmount(user, currentMonth);
+        Map<PaymentMethod, BigDecimal> limits = loadLimits(user, currentMonth);
         return new PlanningSettingsResponse(goalAmount, limits.get(PaymentMethod.CREDIT));
     }
 
     public PlanningSettingsResponse saveSettings(PlanningSettingsRequest request) {
         AppUser user = currentUserService.requireCurrentUser();
-        save(new MonthlyGoalRequest(SETTINGS_MONTH, request.reserveGoal()));
-        saveLimit(user, SETTINGS_MONTH, PaymentMethod.CREDIT, request.creditLimit());
-        saveLimit(user, SETTINGS_MONTH, PaymentMethod.DEBIT, BigDecimal.ZERO);
-        saveLimit(user, SETTINGS_MONTH, PaymentMethod.PIX, BigDecimal.ZERO);
-        saveLimit(user, SETTINGS_MONTH, PaymentMethod.CASH, BigDecimal.ZERO);
+        YearMonth currentMonth = YearMonth.now();
+        save(new MonthlyGoalRequest(currentMonth, request.reserveGoal()));
+        saveLimit(user, currentMonth, PaymentMethod.CREDIT, request.creditLimit());
+        saveLimit(user, currentMonth, PaymentMethod.DEBIT, BigDecimal.ZERO);
+        saveLimit(user, currentMonth, PaymentMethod.PIX, BigDecimal.ZERO);
+        saveLimit(user, currentMonth, PaymentMethod.CASH, BigDecimal.ZERO);
         return getSettings();
+    }
+
+    private BigDecimal resolveGoalAmount(AppUser user, YearMonth month) {
+        return monthlyGoalRepository.findTopByUserAndMonthKeyLessThanEqualOrderByMonthKeyDesc(user, month)
+                .or(() -> monthlyGoalRepository.findByUserAndMonthKey(user, LEGACY_SETTINGS_MONTH))
+                .map(MonthlyGoal::getAmount)
+                .orElse(BigDecimal.ZERO);
     }
 
     private void saveLimit(AppUser user, YearMonth month, PaymentMethod paymentMethod, BigDecimal amount) {
@@ -90,11 +97,12 @@ public class GoalService {
     private Map<PaymentMethod, BigDecimal> loadLimits(AppUser user, YearMonth month) {
         Map<PaymentMethod, BigDecimal> limits = new EnumMap<>(PaymentMethod.class);
         for (PaymentMethod method : PaymentMethod.values()) {
-            limits.put(method, BigDecimal.ZERO);
-        }
-
-        for (MonthlyPaymentLimit limit : monthlyPaymentLimitRepository.findAllByUserAndMonthKey(user, month)) {
-            limits.put(limit.getPaymentMethod(), limit.getAmount());
+            BigDecimal amount = monthlyPaymentLimitRepository
+                    .findTopByUserAndPaymentMethodAndMonthKeyLessThanEqualOrderByMonthKeyDesc(user, method, month)
+                    .or(() -> monthlyPaymentLimitRepository.findByUserAndMonthKeyAndPaymentMethod(user, LEGACY_SETTINGS_MONTH, method))
+                    .map(MonthlyPaymentLimit::getAmount)
+                    .orElse(BigDecimal.ZERO);
+            limits.put(method, amount);
         }
 
         return limits;

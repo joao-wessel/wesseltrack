@@ -32,6 +32,9 @@ public class Income {
     @Column(nullable = false)
     private LocalDate receiveDate;
 
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
     @Column(name = "expected_day", nullable = false)
     private Integer expectedDay;
 
