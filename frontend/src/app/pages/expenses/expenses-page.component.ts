@@ -5,10 +5,11 @@ import { FinanceService } from '../../core/finance.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { ToastService } from '../../core/toast.service';
 import { Category, Expense } from '../../core/models';
+import { CurrencyMaskDirective } from '../../core/currency-mask.directive';
 
 @Component({
   selector: 'app-expenses-page',
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe, CurrencyMaskDirective],
   templateUrl: './expenses-page.component.html',
   styleUrl: './expenses-page.component.scss'
 })

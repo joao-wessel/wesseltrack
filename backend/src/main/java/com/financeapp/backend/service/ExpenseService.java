@@ -81,6 +81,7 @@ public class ExpenseService {
         return responses;
     }
 
+    @Transactional
     public List<ExpenseResponse> create(ExpenseRequest request) {
         AppUser user = currentUserService.requireCurrentUser();
         Category category = requireCategory(request, user);
@@ -107,6 +108,7 @@ public class ExpenseService {
         return List.of(map(expense));
     }
 
+    @Transactional
     public ExpenseResponse update(Long id, ExpenseRequest request) {
         AppUser user = currentUserService.requireCurrentUser();
         Expense expense = expenseRepository.findByIdAndUser(id, user)
@@ -141,6 +143,7 @@ public class ExpenseService {
         return map(expenseRepository.save(expense));
     }
 
+    @Transactional
     public void delete(Long id, YearMonth effectiveMonth) {
         AppUser user = currentUserService.requireCurrentUser();
         Expense expense = expenseRepository.findByIdAndUser(id, user)

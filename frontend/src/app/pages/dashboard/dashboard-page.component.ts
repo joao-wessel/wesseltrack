@@ -30,6 +30,7 @@ export class DashboardPageComponent {
   readonly totalPaymentExpenses = computed(() =>
     (this.dashboard()?.byPaymentMethod ?? []).reduce((sum, item) => sum + item.spent, 0)
   );
+  readonly hasCategoryOverflow = computed(() => (this.dashboard()?.byCategory?.length ?? 0) > 3);
   readonly pieChartStyle = computed(() => this.buildPieChartStyle());
   readonly creditUsageShare = computed(() => {
     const data = this.dashboard();

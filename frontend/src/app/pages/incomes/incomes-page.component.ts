@@ -5,10 +5,11 @@ import { FinanceService } from '../../core/finance.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { ToastService } from '../../core/toast.service';
 import { Income } from '../../core/models';
+import { CurrencyMaskDirective } from '../../core/currency-mask.directive';
 
 @Component({
   selector: 'app-incomes-page',
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe, CurrencyMaskDirective],
   templateUrl: './incomes-page.component.html',
   styleUrl: './incomes-page.component.scss'
 })

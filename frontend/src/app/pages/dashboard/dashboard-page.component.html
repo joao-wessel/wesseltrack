@@ -38,7 +38,7 @@
                 </div>
               </div>
 
-              <div class="legend-list">
+              <div class="legend-list" [class.scrollable]="hasCategoryOverflow()">
                 @for (item of data.byCategory; track item.category) {
                   <div class="legend-row">
                     <div class="legend-label">

@@ -17,6 +17,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     @EntityGraph(attributePaths = "category")
     List<Expense> findAllByUserAndDueDateBetweenOrderByDueDateAsc(AppUser user, LocalDate start, LocalDate end);
 
+    @EntityGraph(attributePaths = "category")
     Optional<Expense> findByIdAndUser(Long id, AppUser user);
 
     long countByUserAndCategory(AppUser user, Category category);
