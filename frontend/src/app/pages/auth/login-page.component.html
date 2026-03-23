@@ -6,12 +6,12 @@
     </div>
     <h1>Controle financeiro claro, seguro e organizado.</h1>
     <p class="description">
-      Autenticação protegida com senha criptografada, rotas seguras e isolamento total dos dados por usuário.
+      Autentica&ccedil;&atilde;o protegida com senha criptografada, rotas seguras e isolamento total dos dados por usu&aacute;rio.
     </p>
     <ul>
       <li>Receitas mensais com datas previstas</li>
-      <li>Despesas fixas, variáveis e parceladas</li>
-      <li>Controle por categoria, cartão e débito</li>
+      <li>Despesas fixas, vari&aacute;veis e parceladas</li>
+      <li>Controle por categoria, cart&atilde;o e d&eacute;bito</li>
     </ul>
   </div>
 
@@ -20,7 +20,7 @@
       <img src="/logo.svg" alt="WesselTrack" />
       <div>
         <span>WesselTrack</span>
-        <small>Acesso à plataforma</small>
+        <small>Acesso &agrave; plataforma</small>
       </div>
     </div>
 
@@ -30,12 +30,12 @@
 
     <form [formGroup]="loginForm" (ngSubmit)="submitLogin()">
       <label>
-        Usuário
+        Usu&aacute;rio
         <input
           type="text"
           formControlName="username"
           autocomplete="username"
-          placeholder="Seu usuário"
+          placeholder="Seu usu&aacute;rio"
           [class.input-invalid]="hasError('username')"
         />
         @if (hasError('username')) {
@@ -56,7 +56,7 @@
         }
       </label>
       <button type="submit" [disabled]="loading()">{{ loading() ? 'Entrando...' : 'Entrar no WesselTrack' }}</button>
-      <p class="helper-text">O cadastro de novos usuários é feito internamente por um administrador.</p>
+      <p class="helper-text">O cadastro de novos usu&aacute;rios &eacute; feito internamente por um administrador.</p>
     </form>
   </div>
 </section>

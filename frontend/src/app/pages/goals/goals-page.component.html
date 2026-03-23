@@ -1,22 +1,22 @@
-﻿<section class="form-page">
+<section class="form-page">
   <div class="page-header">
     <h2>Meta e limites</h2>
-    <p>As alterações passam a valer a partir do mês atual e preservam o histórico dos meses anteriores.</p>
+    <p>As altera&ccedil;&otilde;es passam a valer a partir do m&ecirc;s atual e preservam o hist&oacute;rico dos meses anteriores.</p>
   </div>
 
   <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
     <label>
       <span>Meta de reserva mensal</span>
       <input #reserveGoalInput type="text" inputmode="decimal" appCurrencyMask formControlName="reserveGoal" placeholder="0,00" />
-      @if (form.controls.reserveGoal.touched && form.controls.reserveGoal.invalid) { <small class="error">Informe um valor válido.</small> }
+      @if (form.controls.reserveGoal.touched && form.controls.reserveGoal.invalid) { <small class="error">Informe um valor v&aacute;lido.</small> }
     </label>
 
     <label>
-      <span>Limite no crédito</span>
+      <span>Limite no cr&eacute;dito</span>
       <input #creditLimitInput type="text" inputmode="decimal" appCurrencyMask formControlName="creditLimit" placeholder="0,00" />
-      @if (form.controls.creditLimit.touched && form.controls.creditLimit.invalid) { <small class="error">Informe um valor válido.</small> }
+      @if (form.controls.creditLimit.touched && form.controls.creditLimit.invalid) { <small class="error">Informe um valor v&aacute;lido.</small> }
     </label>
 
-    <button type="submit">Salvar parâmetros</button>
+    <button type="submit">Salvar par&acirc;metros</button>
   </form>
 </section>

@@ -1,35 +1,45 @@
-﻿<section class="admin-grid">
+<section class="admin-grid">
   <div class="page-header">
-    <h2>Usuários</h2>
+    <h2>Usu&aacute;rios</h2>
     <p>Apenas administradores podem cadastrar novos acessos ao WesselTrack.</p>
   </div>
 
+  <button type="button" class="mobile-form-toggle" [class.open]="showForm()" (click)="toggleMobileForm()">
+    <span class="mobile-form-toggle__copy">
+      <strong>{{ showForm() ? 'Ocultar formul&aacute;rio' : 'Abrir formul&aacute;rio' }}</strong>
+      <small>{{ showForm() ? 'Recolha para revisar os acessos cadastrados.' : 'Expanda para criar ou editar usu&aacute;rios.' }}</small>
+    </span>
+    <span class="mobile-form-toggle__icon" aria-hidden="true">{{ showForm() ? '−' : '+' }}</span>
+  </button>
+
   <div class="split">
-    <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
-      <label>
-        <span>Nome</span>
-        <input type="text" formControlName="name" placeholder="Nome" />
-      </label>
-      <label>
-        <span>Usuário</span>
-        <input type="text" formControlName="username" placeholder="Usuário" />
-      </label>
-      <label>
-        <span>Senha</span>
-        <input type="password" formControlName="password" placeholder="Senha" />
-      </label>
-      <label>
-        <span>Perfil</span>
-        <select formControlName="role">
-          <option value="USER">Usuário</option>
-          <option value="ADMIN">Administrador</option>
-        </select>
-      </label>
-      <div class="actions">
-        <button type="submit">{{ editingId() ? 'Salvar usuário' : 'Criar usuário' }}</button>
-        @if (editingId()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }
-      </div>
-    </form>
+    @if (showForm()) {
+      <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
+        <label>
+          <span>Nome</span>
+          <input type="text" formControlName="name" placeholder="Nome" />
+        </label>
+        <label>
+          <span>Usu&aacute;rio</span>
+          <input type="text" formControlName="username" placeholder="Usu&aacute;rio" />
+        </label>
+        <label>
+          <span>Senha</span>
+          <input type="password" formControlName="password" placeholder="Senha" />
+        </label>
+        <label>
+          <span>Perfil</span>
+          <select formControlName="role">
+            <option value="USER">Usu&aacute;rio</option>
+            <option value="ADMIN">Administrador</option>
+          </select>
+        </label>
+        <div class="actions">
+          <button type="submit">{{ editingId() ? 'Salvar usu&aacute;rio' : 'Criar usu&aacute;rio' }}</button>
+          @if (editingId()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }
+        </div>
+      </form>
+    }
 
     <article class="panel list">
       @for (user of users(); track user.id) {
@@ -46,7 +56,7 @@
         </div>
       } @empty {
         <div class="row empty-row">
-          <small>Nenhum usuário cadastrado.</small>
+          <small>Nenhum usu&aacute;rio cadastrado.</small>
         </div>
       }
     </article>

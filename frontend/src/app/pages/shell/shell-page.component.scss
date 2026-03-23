@@ -1,4 +1,4 @@
-﻿:host {
+:host {
   display: block;
   min-height: 100vh;
 }
@@ -26,6 +26,21 @@
   backdrop-filter: blur(14px);
 }
 
+.sidebar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sidebar-menu {
+  display: grid;
+  align-content: space-between;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
 .brand {
   display: flex;
   gap: 0.9rem;
@@ -49,9 +64,19 @@
   color: #64748b;
 }
 
+.sidebar-mobile-actions {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 nav {
   display: grid;
   gap: 0.5rem;
+}
+
+.nav-label-mobile {
+  display: none;
 }
 
 nav a,
@@ -59,7 +84,11 @@ button {
   border-radius: 1rem;
   padding: 0.9rem 1rem;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 700;
+  line-height: 1.2;
   color: #334155;
   border: 1px solid transparent;
   background: transparent;
@@ -124,6 +153,12 @@ button.ghost {
 .icon-button.subtle {
   box-shadow: none;
   background: transparent;
+}
+
+.mobile-menu-button span {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .modal-backdrop {
@@ -206,32 +241,48 @@ button.ghost {
 @media (max-width: 980px) {
   .shell {
     grid-template-columns: 1fr;
+    align-content: start;
+    grid-auto-rows: max-content;
   }
 
   .sidebar {
-    position: static;
+    position: relative;
     height: auto;
+    justify-content: flex-start;
     border-right: 0;
     border-bottom: 1px solid rgba(148, 163, 184, 0.16);
     padding: 1rem;
     gap: 1rem;
   }
 
-  nav {
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    overflow-x: auto;
-    padding-bottom: 0.2rem;
-    scrollbar-width: none;
+  .sidebar-mobile-actions {
+    display: inline-flex;
   }
 
-  nav::-webkit-scrollbar {
+  .sidebar-menu {
     display: none;
+    position: absolute;
+    top: calc(100% - 0.15rem);
+    left: 1rem;
+    right: 1rem;
+    gap: 0.85rem;
+    flex: initial;
+    padding: 0.85rem;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+    z-index: 20;
   }
 
-  nav a,
-  button {
-    white-space: nowrap;
+  .sidebar-menu.open {
+    display: grid;
+  }
+
+  nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+    padding-bottom: 0;
   }
 
   .content {
@@ -244,11 +295,38 @@ button.ghost {
     align-items: start;
     margin-bottom: 1rem;
   }
+
+  nav a {
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+    white-space: normal;
+    min-height: 3rem;
+  }
+
+  .sidebar-menu > button.ghost {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .password-shortcut {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
+  .sidebar {
+    padding: 0.95rem;
+  }
+
+  .sidebar-menu {
+    left: 0.95rem;
+    right: 0.95rem;
+  }
+
   .brand {
     gap: 0.75rem;
+    min-width: 0;
   }
 
   .brand img {
@@ -256,9 +334,43 @@ button.ghost {
     height: 2.5rem;
   }
 
+  .brand div {
+    min-width: 0;
+  }
+
+  .brand small {
+    display: none;
+  }
+
+  .content-header {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
   .content-header h1 {
     font-size: 1.55rem;
     line-height: 1.1;
+  }
+
+  nav {
+    grid-template-columns: 1fr;
+  }
+
+  nav a {
+    padding-inline: 1rem;
+  }
+
+  .nav-label-desktop {
+    display: none;
+  }
+
+  .nav-label-mobile {
+    display: inline;
+  }
+
+  .sidebar-mobile-actions .icon-button {
+    width: 2.75rem;
+    height: 2.75rem;
   }
 
   .modal-backdrop {

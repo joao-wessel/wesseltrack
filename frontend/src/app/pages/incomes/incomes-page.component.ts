@@ -5,11 +5,10 @@ import { FinanceService } from '../../core/finance.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { ToastService } from '../../core/toast.service';
 import { Income } from '../../core/models';
-import { CurrencyMaskDirective } from '../../core/currency-mask.directive';
 
 @Component({
   selector: 'app-incomes-page',
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe, CurrencyMaskDirective],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe],
   templateUrl: './incomes-page.component.html',
   styleUrl: './incomes-page.component.scss'
 })
@@ -35,6 +34,10 @@ export class IncomesPageComponent implements OnDestroy {
   readonly editingRecurring = signal(false);
   readonly activeTab = signal<'monthly' | 'fixed'>('monthly');
   readonly panelHeight = signal<number | null>(null);
+  readonly compactLayout = signal(this.isCompactViewport());
+  readonly mobileFormOpen = signal(false);
+  readonly listPanelHeight = computed(() => (this.compactLayout() ? null : this.panelHeight()));
+  readonly showActiveForm = computed(() => !this.compactLayout() || this.mobileFormOpen());
 
   readonly monthlyForm = this.fb.nonNullable.group({
     description: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(120)]),
@@ -52,11 +55,17 @@ export class IncomesPageComponent implements OnDestroy {
   readonly monthlyIncomes = computed(() => this.incomes().filter((item) => !item.recurring));
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', this.handleViewportResize, { passive: true });
+    }
     this.load();
   }
 
   ngOnDestroy() {
     this.resizeObserver?.disconnect();
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', this.handleViewportResize);
+    }
   }
 
   changeMonth(value: string) {
@@ -66,6 +75,7 @@ export class IncomesPageComponent implements OnDestroy {
 
   saveMonthly() {
     if (this.monthlyForm.invalid) {
+      this.mobileFormOpen.set(true);
       this.monthlyForm.markAllAsTouched();
       this.toastService.error('Preencha corretamente os campos da receita mensal.');
       return;
@@ -88,6 +98,7 @@ export class IncomesPageComponent implements OnDestroy {
 
   saveFixed() {
     if (this.fixedForm.invalid) {
+      this.mobileFormOpen.set(true);
       this.fixedForm.markAllAsTouched();
       this.toastService.error('Preencha corretamente os campos da receita fixa.');
       return;
@@ -116,6 +127,7 @@ export class IncomesPageComponent implements OnDestroy {
   edit(item: Income) {
     this.editingId.set(item.id);
     this.editingRecurring.set(item.recurring);
+    this.mobileFormOpen.set(true);
 
     const values = {
       description: item.description,
@@ -146,7 +158,7 @@ export class IncomesPageComponent implements OnDestroy {
   async remove(item: Income) {
     const confirmed = await this.confirmDialog.open({
       title: 'Excluir receita',
-      message: `Confirma a exclusão de "${item.description}"? Esta ação não poderá ser desfeita.`,
+      message: `Confirma a exclus\u00E3o de "${item.description}"? Esta a\u00E7\u00E3o n\u00E3o poder\u00E1 ser desfeita.`,
       confirmLabel: 'Excluir',
       cancelLabel: 'Cancelar',
       variant: 'danger'
@@ -158,7 +170,7 @@ export class IncomesPageComponent implements OnDestroy {
 
     this.financeService.deleteIncome(item.id, item.recurring ? this.month() : undefined).subscribe({
       next: () => {
-        this.toastService.success('Receita excluída com sucesso.');
+        this.toastService.success('Receita exclu\u00EDda com sucesso.');
         this.load();
       },
       error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao excluir receita.')
@@ -170,10 +182,20 @@ export class IncomesPageComponent implements OnDestroy {
     this.editingRecurring.set(false);
     this.monthlyForm.reset({ description: '', amount: null, receiveDate: '' });
     this.fixedForm.reset({ description: '', amount: null, expectedDay: null });
+    if (this.compactLayout()) {
+      this.mobileFormOpen.set(false);
+    }
   }
 
   selectTab(tab: 'monthly' | 'fixed') {
     this.activeTab.set(tab);
+    if (this.compactLayout() && !this.editingId()) {
+      this.mobileFormOpen.set(false);
+    }
+  }
+
+  toggleMobileForm() {
+    this.mobileFormOpen.update((value) => !value);
   }
 
   private afterSave(message: string, recurring: boolean) {
@@ -185,7 +207,7 @@ export class IncomesPageComponent implements OnDestroy {
   private load() {
     this.financeService.getIncomes(this.month()).subscribe({
       next: (incomes) => this.incomes.set(incomes),
-      error: () => this.toastService.error('Não foi possível carregar as receitas.')
+      error: () => this.toastService.error('N\u00E3o foi poss\u00EDvel carregar as receitas.')
     });
   }
 
@@ -221,6 +243,14 @@ export class IncomesPageComponent implements OnDestroy {
     }, 0);
   }
 
+  private readonly handleViewportResize = () => {
+    this.compactLayout.set(this.isCompactViewport());
+  };
+
+  private isCompactViewport(): boolean {
+    return typeof window !== 'undefined' && window.innerWidth <= 900;
+  }
+
   private observeActiveFormPanel() {
     this.resizeObserver?.disconnect();
 
@@ -238,3 +268,5 @@ export class IncomesPageComponent implements OnDestroy {
     this.resizeObserver.observe(this.activeFormPanelElement);
   }
 }
+
+

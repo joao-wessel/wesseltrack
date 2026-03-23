@@ -34,7 +34,7 @@ export class LoginPageComponent {
     const control = this.loginForm.controls[controlName];
 
     if (control.hasError('required')) {
-      return controlName === 'username' ? 'Informe o usuário.' : 'Informe a senha.';
+      return controlName === 'username' ? 'Informe o usu\u00E1rio.' : 'Informe a senha.';
     }
 
     if (controlName === 'password' && control.hasError('minlength')) {

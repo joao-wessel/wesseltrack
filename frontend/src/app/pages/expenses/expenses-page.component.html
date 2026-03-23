@@ -2,57 +2,69 @@
   <div class="page-header header-panel">
     <div>
       <h2>Despesas</h2>
-      <p>Lançamento rápido para variáveis, cadastro recorrente para fixas e parcelamento automático para compras no crédito.</p>
+      <p>Lan&ccedil;amento r&aacute;pido para vari&aacute;veis, cadastro recorrente para fixas e parcelamento autom&aacute;tico para compras no cr&eacute;dito.</p>
     </div>
     <label class="month-filter">
-      <span>Mês</span>
+      <span>M&ecirc;s</span>
       <input type="month" lang="pt-BR" [value]="month()" (input)="changeMonth($any($event.target).value)" />
     </label>
   </div>
 
   <section class="panel tabs-panel">
     <div class="tab-list">
-      <button type="button" class="tab-button" [class.active]="activeTab() === 'quick'" (click)="selectTab('quick')">Lançamento rápido</button>
+      <button type="button" class="tab-button" [class.active]="activeTab() === 'quick'" (click)="selectTab('quick')">Lan&ccedil;amento r&aacute;pido</button>
       <button type="button" class="tab-button" [class.active]="activeTab() === 'fixed'" (click)="selectTab('fixed')">Despesa fixa</button>
       <button type="button" class="tab-button" [class.active]="activeTab() === 'installment'" (click)="selectTab('installment')">Parcelada</button>
     </div>
 
+    <button type="button" class="mobile-form-toggle" [class.open]="showActiveForm()" (click)="toggleMobileForm()">
+      <span class="mobile-form-toggle__copy">
+        <strong>{{ showActiveForm() ? 'Ocultar formul&aacute;rio' : 'Abrir formul&aacute;rio' }}</strong>
+        <small>{{ showActiveForm() ? 'Recolha para focar na lista de despesas.' : 'Expanda para cadastrar ou editar despesas.' }}</small>
+      </span>
+      <span class="mobile-form-toggle__icon" aria-hidden="true">{{ showActiveForm() ? '−' : '+' }}</span>
+    </button>
+
     @if (activeTab() === 'quick') {
       <div class="tab-content">
-        <form #activeFormPanel [formGroup]="quickForm" (ngSubmit)="saveQuick()" class="panel inner-panel form-grid">
-          <h3>Lançamento rápido</h3>
-          <label><span>Descrição</span><input type="text" formControlName="description" placeholder="Descrição" /></label>
-          <label><span>Categoria</span><select formControlName="categoryId"><option [ngValue]="null">Selecione</option>@for (category of categories(); track category.id) { <option [ngValue]="category.id">{{ category.name }}</option> }</select></label>
-          <label><span>Forma de pagamento</span><select formControlName="paymentMethod"><option value="DEBIT">Débito</option><option value="CREDIT">Crédito</option><option value="PIX">PIX</option><option value="CASH">Dinheiro</option></select></label>
-          <label><span>Valor</span><input #quickAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
-          <label><span>Data</span><input type="date" lang="pt-BR" formControlName="dueDate" /></label>
-          <div class="actions"><button type="submit">Salvar rápida</button>@if (editingId() && editingMode()==='quick') { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
-        </form>
+        @if (showActiveForm()) {
+          <form #activeFormPanel [formGroup]="quickForm" (ngSubmit)="saveQuick()" class="panel inner-panel form-grid">
+            <h3>Lan&ccedil;amento r&aacute;pido</h3>
+            <label><span>Descri&ccedil;&atilde;o</span><input type="text" formControlName="description" placeholder="Descri&ccedil;&atilde;o" /></label>
+            <label><span>Categoria</span><select formControlName="categoryId"><option [ngValue]="null">Selecione</option>@for (category of categories(); track category.id) { <option [ngValue]="category.id">{{ category.name }}</option> }</select></label>
+            <label><span>Forma de pagamento</span><select formControlName="paymentMethod"><option value="DEBIT">D&eacute;bito</option><option value="CREDIT">Cr&eacute;dito</option><option value="PIX">PIX</option><option value="CASH">Dinheiro</option></select></label>
+            <label><span>Valor</span><input #quickAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
+            <label><span>Data</span><input type="date" lang="pt-BR" formControlName="dueDate" /></label>
+            <div class="actions"><button type="submit">Salvar r&aacute;pida</button>@if (editingId() && editingMode()==='quick') { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
+          </form>
+        }
 
-        <article class="panel inner-panel list-panel" [style.height.px]="panelHeight()" [style.maxHeight.px]="panelHeight()">
-          <h3>Lançamentos rápidos</h3>
+        <article class="panel inner-panel list-panel" [style.height.px]="listPanelHeight()" [style.maxHeight.px]="listPanelHeight()">
+          <h3>Lan&ccedil;amentos r&aacute;pidos</h3>
           <div class="list">
             @for (expense of quickExpenses(); track expense.id) {
               <div class="row"><div><strong>{{ expense.description }}</strong><small><span class="category-chip"><i [style.background]="expense.categoryColor"></i>{{ expense.category }}</span><span>{{ paymentMethodLabel(expense.paymentMethod) }}</span><span>{{ expense.dueDate | date:'dd/MM/yyyy' }}</span></small></div><div class="actions compact"><strong>{{ expense.amount | currency:'BRL':'symbol':'1.2-2' }}</strong><button type="button" class="ghost small" (click)="edit(expense)">Editar</button><button type="button" class="ghost small danger" (click)="remove(expense)">Excluir</button></div></div>
             } @empty {
-              <div class="row empty-row"><small><span>Nenhum lançamento rápido cadastrado para este mês.</span></small></div>
+              <div class="row empty-row"><small><span>Nenhum lan&ccedil;amento r&aacute;pido cadastrado para este m&ecirc;s.</span></small></div>
             }
           </div>
         </article>
       </div>
     } @else if (activeTab() === 'fixed') {
       <div class="tab-content">
-        <form #activeFormPanel [formGroup]="fixedForm" (ngSubmit)="saveFixed()" class="panel inner-panel form-grid">
-          <h3>Despesa fixa</h3>
-          <label><span>Descrição</span><input type="text" formControlName="description" placeholder="Descrição" /></label>
-          <label><span>Categoria</span><select formControlName="categoryId"><option [ngValue]="null">Selecione</option>@for (category of categories(); track category.id) { <option [ngValue]="category.id">{{ category.name }}</option> }</select></label>
-          <label><span>Forma de pagamento</span><select formControlName="paymentMethod"><option value="DEBIT">Débito</option><option value="CREDIT">Crédito</option><option value="PIX">PIX</option><option value="CASH">Dinheiro</option></select></label>
-          <label><span>Valor</span><input #fixedAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
-          <label><span>Data base</span><input type="date" lang="pt-BR" formControlName="dueDate" /></label>
-          <div class="actions"><button type="submit">Salvar fixa</button>@if (editingId() && editingMode()==='fixed') { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
-        </form>
+        @if (showActiveForm()) {
+          <form #activeFormPanel [formGroup]="fixedForm" (ngSubmit)="saveFixed()" class="panel inner-panel form-grid">
+            <h3>Despesa fixa</h3>
+            <label><span>Descri&ccedil;&atilde;o</span><input type="text" formControlName="description" placeholder="Descri&ccedil;&atilde;o" /></label>
+            <label><span>Categoria</span><select formControlName="categoryId"><option [ngValue]="null">Selecione</option>@for (category of categories(); track category.id) { <option [ngValue]="category.id">{{ category.name }}</option> }</select></label>
+            <label><span>Forma de pagamento</span><select formControlName="paymentMethod"><option value="DEBIT">D&eacute;bito</option><option value="CREDIT">Cr&eacute;dito</option><option value="PIX">PIX</option><option value="CASH">Dinheiro</option></select></label>
+            <label><span>Valor</span><input #fixedAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
+            <label><span>Data base</span><input type="date" lang="pt-BR" formControlName="dueDate" /></label>
+            <div class="actions"><button type="submit">Salvar fixa</button>@if (editingId() && editingMode()==='fixed') { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
+          </form>
+        }
 
-        <article class="panel inner-panel list-panel" [style.height.px]="panelHeight()" [style.maxHeight.px]="panelHeight()">
+        <article class="panel inner-panel list-panel" [style.height.px]="listPanelHeight()" [style.maxHeight.px]="listPanelHeight()">
           <h3>Despesas fixas</h3>
           <div class="list">
             @for (expense of fixedExpenses(); track expense.id) {
@@ -65,25 +77,27 @@
       </div>
     } @else {
       <div class="tab-content">
-        <form #activeFormPanel [formGroup]="installmentForm" (ngSubmit)="saveInstallment()" class="panel inner-panel form-grid">
-          <h3>Compra parcelada</h3>
-          <label><span>Descrição</span><input type="text" formControlName="description" placeholder="Descrição" /></label>
-          <label><span>Categoria</span><select formControlName="categoryId"><option [ngValue]="null">Selecione</option>@for (category of categories(); track category.id) { <option [ngValue]="category.id">{{ category.name }}</option> }</select></label>
-          <label><span>Forma de pagamento</span><input type="text" value="Crédito" disabled /></label>
-          <label><span>Valor da compra</span><input #installmentAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
-          <label><span>Data da compra</span><input type="date" lang="pt-BR" formControlName="dueDate" /></label>
-          <label><span>Quantidade de parcelas</span><input type="number" formControlName="installmentCount" placeholder="Parcelas" /></label>
-          <label>
-            <span>Primeira parcela</span>
-            <select formControlName="firstInstallmentNextMonth">
-              <option [ngValue]="false">Entra neste mês</option>
-              <option [ngValue]="true">Entra no próximo mês</option>
-            </select>
-          </label>
-          <div class="actions"><button type="submit">Salvar parcelada</button>@if (editingId() && editingMode()==='installment') { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
-        </form>
+        @if (showActiveForm()) {
+          <form #activeFormPanel [formGroup]="installmentForm" (ngSubmit)="saveInstallment()" class="panel inner-panel form-grid">
+            <h3>Compra parcelada</h3>
+            <label><span>Descri&ccedil;&atilde;o</span><input type="text" formControlName="description" placeholder="Descri&ccedil;&atilde;o" /></label>
+            <label><span>Categoria</span><select formControlName="categoryId"><option [ngValue]="null">Selecione</option>@for (category of categories(); track category.id) { <option [ngValue]="category.id">{{ category.name }}</option> }</select></label>
+            <label><span>Forma de pagamento</span><input type="text" value="Cr&eacute;dito" disabled /></label>
+            <label><span>Valor da compra</span><input #installmentAmountInput type="text" inputmode="decimal" appCurrencyMask formControlName="amount" placeholder="0,00" /></label>
+            <label><span>Data da compra</span><input type="date" lang="pt-BR" formControlName="dueDate" /></label>
+            <label><span>Quantidade de parcelas</span><input type="number" formControlName="installmentCount" placeholder="Parcelas" /></label>
+            <label>
+              <span>Primeira parcela</span>
+              <select formControlName="firstInstallmentNextMonth">
+                <option [ngValue]="false">Entra neste m&ecirc;s</option>
+                <option [ngValue]="true">Entra no pr&oacute;ximo m&ecirc;s</option>
+              </select>
+            </label>
+            <div class="actions"><button type="submit">Salvar parcelada</button>@if (editingId() && editingMode()==='installment') { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }</div>
+          </form>
+        }
 
-        <article class="panel inner-panel list-panel" [style.height.px]="panelHeight()" [style.maxHeight.px]="panelHeight()">
+        <article class="panel inner-panel list-panel" [style.height.px]="listPanelHeight()" [style.maxHeight.px]="listPanelHeight()">
           <h3>Compras parceladas</h3>
           <div class="list">
             @for (expense of installmentExpenses(); track expense.id) {

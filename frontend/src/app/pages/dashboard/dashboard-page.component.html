@@ -3,18 +3,18 @@
     <div class="page-header header-panel">
       <div>
         <h2>Painel financeiro</h2>
-        <p>Visão consolidada do mês selecionado.</p>
+        <p>Vis&atilde;o consolidada do m&ecirc;s selecionado.</p>
       </div>
       <div class="header-actions">
-        <button type="button" class="ghost" (click)="changeMonth(-1)">Mês anterior</button>
+        <button type="button" class="ghost" (click)="changeMonth(-1)">M&ecirc;s anterior</button>
         <span class="month-pill">{{ activeMonthLabel() }}</span>
-        <button type="button" class="ghost" (click)="changeMonth(1)">Próximo mês</button>
+        <button type="button" class="ghost" (click)="changeMonth(1)">Pr&oacute;ximo m&ecirc;s</button>
       </div>
     </div>
 
     <section class="summary-grid">
-      <app-summary-card label="Receitas" [value]="data.totalIncome" hint="Entradas previstas no mês" />
-      <app-summary-card label="Despesas" [value]="data.totalExpenses" hint="Fixas, variáveis e parceladas" />
+      <app-summary-card label="Receitas" [value]="data.totalIncome" hint="Entradas previstas no m&ecirc;s" />
+      <app-summary-card label="Despesas" [value]="data.totalExpenses" hint="Fixas, vari&aacute;veis e parceladas" />
       <app-summary-card label="Meta" [value]="data.goalAmount" hint="Reserva mensal configurada" />
       <app-summary-card label="Saldo" [value]="totalAvailable()" hint="Receitas - despesas - meta" />
     </section>
@@ -24,7 +24,7 @@
         <article class="panel pie-panel">
           <div class="panel-header">
             <h3>Gastos por categoria</h3>
-            <p>Distribuição dos gastos por categoria no mês.</p>
+            <p>Distribui&ccedil;&atilde;o dos gastos por categoria no m&ecirc;s.</p>
           </div>
 
           @if (data.byCategory.length) {
@@ -55,15 +55,15 @@
             </div>
           } @else {
             <div class="empty-state">
-              <p>Nenhum gasto categorizado neste mês.</p>
+              <p>Nenhum gasto categorizado neste m&ecirc;s.</p>
             </div>
           }
         </article>
 
         <article class="panel action-panel">
           <div class="indicator-header">
-            <h3>Fatura máxima do cartão</h3>
-            <p>(Receitas do mês - contas fixas fora do crédito) ÷ 2</p>
+            <h3>Fatura m&aacute;xima do cart&atilde;o</h3>
+            <p>(Receitas do m&ecirc;s - contas fixas fora do cr&eacute;dito) ÷ 2</p>
           </div>
           <div class="indicator-main">
             <div>
@@ -80,18 +80,18 @@
               <span [style.width.%]="creditUsageShare()" [style.background]="creditBillStatusTone()"></span>
             </div>
             <div class="indicator-progress-labels">
-              <small>Fatura atual no crédito</small>
+              <small>Fatura atual no cr&eacute;dito</small>
               <strong>{{ data.creditUsage.spent | currency:'BRL':'symbol':'1.2-2' }}</strong>
             </div>
           </div>
 
           <div class="indicator-metrics">
             <div class="metric-card">
-              <small>Receitas do mês</small>
+              <small>Receitas do m&ecirc;s</small>
               <strong>{{ data.totalIncome | currency:'BRL':'symbol':'1.2-2' }}</strong>
             </div>
             <div class="metric-card">
-              <small>Fixas fora do crédito</small>
+              <small>Fixas fora do cr&eacute;dito</small>
               <strong>{{ data.fixedExpensesOutsideCredit | currency:'BRL':'symbol':'1.2-2' }}</strong>
             </div>
             <div class="metric-card">
@@ -105,7 +105,7 @@
       <article class="panel payments-panel">
         <div class="panel-header">
           <h3>Gastos por forma de pagamento</h3>
-          <p>Resumo por meio de pagamento com participação no total do mês.</p>
+          <p>Resumo por meio de pagamento com participa&ccedil;&atilde;o no total do m&ecirc;s.</p>
         </div>
 
         @if (data.byPaymentMethod.length) {
@@ -130,7 +130,7 @@
           </div>
         } @else {
           <div class="empty-state">
-            <p>Nenhum gasto por forma de pagamento neste mês.</p>
+            <p>Nenhum gasto por forma de pagamento neste m&ecirc;s.</p>
           </div>
         }
       </article>
@@ -142,8 +142,8 @@
   <section class="page-grid">
     <article class="panel action-panel">
       <div>
-        <h3>Painel indisponível</h3>
-        <p>{{ loadError() ?? 'Não foi possível carregar o painel.' }}</p>
+        <h3>Painel indispon&iacute;vel</h3>
+        <p>{{ loadError() ?? 'N&atilde;o foi poss&iacute;vel carregar o painel.' }}</p>
       </div>
       <button type="button" (click)="changeMonth(0)">Tentar novamente</button>
     </article>

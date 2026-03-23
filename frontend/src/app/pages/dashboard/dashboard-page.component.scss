@@ -1,4 +1,4 @@
-﻿.page-grid, .content-grid, .summary-grid, .left-stack { display: grid; gap: 1rem; }
+.page-grid, .content-grid, .summary-grid, .left-stack { display: grid; gap: 1rem; min-width: 0; }
 .header-panel { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
 .header-panel h2, .header-panel p { margin: 0; }
 .header-panel p { color: #64748b; }
@@ -22,13 +22,13 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
 .pie-center { position: absolute; display: grid; gap: 0.15rem; text-align: center; z-index: 1; }
 .pie-center strong { font-size: 1rem; }
 .pie-center span { color: #64748b; font-size: 0.85rem; }
-.legend-list { display: grid; gap: 0.75rem; }
+.legend-list { display: grid; gap: 0.75rem; min-width: 0; }
 .legend-row { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; padding: 0.8rem 0.9rem; background: #f8fafc; border-radius: 1rem; }
-.legend-label { display: flex; align-items: center; gap: 0.75rem; }
+.legend-label { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
 .legend-label i { width: 0.8rem; height: 0.8rem; border-radius: 999px; display: inline-block; }
 .legend-label strong, .legend-label small { display: block; }
 .legend-label small { color: #64748b; }
-.payment-cards { display: grid; gap: 0.9rem; margin-top: 1rem; }
+.payment-cards { display: grid; gap: 0.9rem; margin-top: 1rem; min-width: 0; }
 .payment-card { display: grid; gap: 0.55rem; padding: 1rem; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-radius: 1.1rem; }
 .payment-card-top { display: flex; align-items: center; gap: 0.65rem; }
 .payment-badge { width: 0.75rem; height: 0.75rem; border-radius: 999px; display: inline-block; }
@@ -42,7 +42,7 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
 .indicator-header h3,
 .indicator-header p { margin: 0; }
 .indicator-header p { color: #64748b; }
-.indicator-main { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+.indicator-main { display: flex; justify-content: space-between; gap: 1rem; align-items: start; min-width: 0; }
 .indicator-value { font-size: 1.85rem; line-height: 1.1; }
 .status-pill {
   display: inline-flex;
@@ -80,6 +80,7 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
+  min-width: 0;
 }
 .metric-card {
   display: grid;
@@ -133,6 +134,10 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
     padding: 0.85rem;
   }
 
+  .legend-label {
+    align-items: start;
+  }
+
   .legend-row > strong {
     justify-self: start;
   }
@@ -148,4 +153,14 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
   .status-pill {
     width: fit-content;
   }
+
+  .indicator-progress-labels {
+    gap: 0.45rem;
+  }
+
+  .indicator-progress-labels small {
+    overflow-wrap: anywhere;
+  }
 }
+
+

@@ -1,31 +1,41 @@
-﻿<section class="admin-grid">
+<section class="admin-grid">
   <div class="page-header">
     <h2>Categorias</h2>
-    <p>Criação e manutenção das categorias disponíveis para todos os usuários.</p>
+    <p>Cria&ccedil;&atilde;o e manuten&ccedil;&atilde;o das categorias dispon&iacute;veis para todos os usu&aacute;rios.</p>
   </div>
 
+  <button type="button" class="mobile-form-toggle" [class.open]="showForm()" (click)="toggleMobileForm()">
+    <span class="mobile-form-toggle__copy">
+      <strong>{{ showForm() ? 'Ocultar formul&aacute;rio' : 'Abrir formul&aacute;rio' }}</strong>
+      <small>{{ showForm() ? 'Recolha para ver melhor a lista de categorias.' : 'Expanda para criar ou editar categorias.' }}</small>
+    </span>
+    <span class="mobile-form-toggle__icon" aria-hidden="true">{{ showForm() ? '−' : '+' }}</span>
+  </button>
+
   <div class="split">
-    <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
-      <h3>{{ editingId() ? 'Editar categoria' : 'Nova categoria' }}</h3>
-      <label>
-        <span>Nome</span>
-        <input type="text" formControlName="name" placeholder="Nome da categoria" />
-      </label>
-      <label>
-        <span>Cor</span>
-        <div class="color-picker-row">
-          <input type="color" formControlName="color" />
-          <div class="color-preview">
-            <i [style.background]="form.controls.color.value"></i>
-            <strong>{{ form.controls.color.value }}</strong>
+    @if (showForm()) {
+      <form [formGroup]="form" (ngSubmit)="save()" class="panel form-grid">
+        <h3>{{ editingId() ? 'Editar categoria' : 'Nova categoria' }}</h3>
+        <label>
+          <span>Nome</span>
+          <input type="text" formControlName="name" placeholder="Nome da categoria" />
+        </label>
+        <label>
+          <span>Cor</span>
+          <div class="color-picker-row">
+            <input type="color" formControlName="color" />
+            <div class="color-preview">
+              <i [style.background]="form.controls.color.value"></i>
+              <strong>{{ form.controls.color.value }}</strong>
+            </div>
           </div>
+        </label>
+        <div class="actions">
+          <button type="submit">Salvar</button>
+          @if (editingId()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }
         </div>
-      </label>
-      <div class="actions">
-        <button type="submit">Salvar</button>
-        @if (editingId()) { <button type="button" class="ghost" (click)="cancel()">Cancelar</button> }
-      </div>
-    </form>
+      </form>
+    }
 
     <article class="panel list">
       @for (category of categories(); track category.id) {

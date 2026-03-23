@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal } from '@angular/core';
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmDialogService } from '../../../core/confirm-dialog.service';
@@ -12,7 +12,7 @@ import { ToastService } from '../../../core/toast.service';
   templateUrl: './users-page.component.html',
   styleUrl: './users-page.component.scss'
 })
-export class UsersPageComponent {
+export class UsersPageComponent implements OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly financeService = inject(FinanceService);
@@ -20,6 +20,9 @@ export class UsersPageComponent {
 
   readonly users = signal<ManagedUser[]>([]);
   readonly editingId = signal<number | null>(null);
+  readonly compactLayout = signal(this.isCompactViewport());
+  readonly mobileFormOpen = signal(false);
+  readonly showForm = computed(() => !this.compactLayout() || this.mobileFormOpen());
   readonly form = this.fb.nonNullable.group({
     name: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(120)]),
     username: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(4), Validators.maxLength(80)]),
@@ -28,7 +31,16 @@ export class UsersPageComponent {
   });
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', this.handleViewportResize, { passive: true });
+    }
     this.load();
+  }
+
+  ngOnDestroy() {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', this.handleViewportResize);
+    }
   }
 
   save() {
@@ -38,8 +50,9 @@ export class UsersPageComponent {
     }
 
     if (this.form.invalid) {
+      this.mobileFormOpen.set(true);
       this.form.markAllAsTouched();
-      this.toastService.error('Preencha corretamente os campos do usuário.');
+      this.toastService.error('Preencha corretamente os campos do usu\u00E1rio.');
       return;
     }
 
@@ -53,16 +66,17 @@ export class UsersPageComponent {
 
     request.subscribe({
       next: () => {
-        this.toastService.success(this.editingId() ? 'Usuário atualizado com sucesso.' : 'Usuário criado com sucesso.');
+        this.toastService.success(this.editingId() ? 'Usu\u00E1rio atualizado com sucesso.' : 'Usu\u00E1rio criado com sucesso.');
         this.cancel();
         this.load();
       },
-      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar usuário.')
+      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar usu\u00E1rio.')
     });
   }
 
   edit(user: ManagedUser) {
     this.editingId.set(user.id);
+    this.mobileFormOpen.set(true);
     this.form.reset({
       name: user.name,
       username: user.username,
@@ -73,8 +87,8 @@ export class UsersPageComponent {
 
   async remove(user: ManagedUser) {
     const confirmed = await this.confirmDialog.open({
-      title: 'Excluir usuário',
-      message: `Confirma a exclusão do usuário "${user.username}"? Esta ação não poderá ser desfeita.`,
+      title: 'Excluir usu\u00E1rio',
+      message: `Confirma a exclus\u00E3o do usu\u00E1rio "${user.username}"? Esta a\u00E7\u00E3o n\u00E3o poder\u00E1 ser desfeita.`,
       confirmLabel: 'Excluir',
       cancelLabel: 'Cancelar',
       variant: 'danger'
@@ -86,22 +100,37 @@ export class UsersPageComponent {
 
     this.financeService.deleteUser(user.id).subscribe({
       next: () => {
-        this.toastService.success('Usuário excluído com sucesso.');
+        this.toastService.success('Usu\u00E1rio exclu\u00EDdo com sucesso.');
         this.load();
       },
-      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao excluir usuário.')
+      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao excluir usu\u00E1rio.')
     });
   }
 
   cancel() {
     this.editingId.set(null);
     this.form.reset({ name: '', username: '', password: '', role: 'USER' });
+    if (this.compactLayout()) {
+      this.mobileFormOpen.set(false);
+    }
+  }
+
+  toggleMobileForm() {
+    this.mobileFormOpen.update((value) => !value);
   }
 
   private load() {
     this.financeService.getUsers().subscribe({
       next: (users) => this.users.set(users),
-      error: () => this.toastService.error('Não foi possível carregar os usuários.')
+      error: () => this.toastService.error('N\u00E3o foi poss\u00EDvel carregar os usu\u00E1rios.')
     });
+  }
+
+  private readonly handleViewportResize = () => {
+    this.compactLayout.set(this.isCompactViewport());
+  };
+
+  private isCompactViewport(): boolean {
+    return typeof window !== 'undefined' && window.innerWidth <= 720;
   }
 }

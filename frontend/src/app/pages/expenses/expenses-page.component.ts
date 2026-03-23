@@ -5,11 +5,10 @@ import { FinanceService } from '../../core/finance.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { ToastService } from '../../core/toast.service';
 import { Category, Expense } from '../../core/models';
-import { CurrencyMaskDirective } from '../../core/currency-mask.directive';
 
 @Component({
   selector: 'app-expenses-page',
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe, CurrencyMaskDirective],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe],
   templateUrl: './expenses-page.component.html',
   styleUrl: './expenses-page.component.scss'
 })
@@ -37,6 +36,10 @@ export class ExpensesPageComponent implements OnDestroy {
   readonly editingMode = signal<'quick' | 'fixed' | 'installment' | null>(null);
   readonly activeTab = signal<'quick' | 'fixed' | 'installment'>('quick');
   readonly panelHeight = signal<number | null>(null);
+  readonly compactLayout = signal(this.isCompactViewport());
+  readonly mobileFormOpen = signal(false);
+  readonly listPanelHeight = computed(() => (this.compactLayout() ? null : this.panelHeight()));
+  readonly showActiveForm = computed(() => !this.compactLayout() || this.mobileFormOpen());
 
   readonly quickForm = this.fb.nonNullable.group({
     description: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(140)]),
@@ -68,11 +71,17 @@ export class ExpensesPageComponent implements OnDestroy {
   readonly installmentExpenses = computed(() => this.expenses().filter((item) => item.type === 'INSTALLMENT'));
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', this.handleViewportResize, { passive: true });
+    }
     this.load();
   }
 
   ngOnDestroy() {
     this.resizeObserver?.disconnect();
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', this.handleViewportResize);
+    }
   }
 
   changeMonth(value: string) {
@@ -82,17 +91,19 @@ export class ExpensesPageComponent implements OnDestroy {
 
   saveQuick() {
     if (this.quickForm.invalid) {
+      this.mobileFormOpen.set(true);
       this.quickForm.markAllAsTouched();
-      this.toastService.error('Preencha corretamente os campos do lançamento rápido.');
+      this.toastService.error('Preencha corretamente os campos do lan\u00E7amento r\u00E1pido.');
       return;
     }
 
     const payload = { ...this.quickForm.getRawValue(), type: 'VARIABLE', recurring: false };
-    this.saveExpense(payload as any, 'quick', 'Despesa rápida salva com sucesso.');
+    this.saveExpense(payload as any, 'quick', 'Despesa r\u00E1pida salva com sucesso.');
   }
 
   saveFixed() {
     if (this.fixedForm.invalid) {
+      this.mobileFormOpen.set(true);
       this.fixedForm.markAllAsTouched();
       this.toastService.error('Preencha corretamente os campos da despesa fixa.');
       return;
@@ -109,6 +120,7 @@ export class ExpensesPageComponent implements OnDestroy {
 
   saveInstallment() {
     if (this.installmentForm.invalid) {
+      this.mobileFormOpen.set(true);
       this.installmentForm.markAllAsTouched();
       this.toastService.error('Preencha corretamente os campos da compra parcelada.');
       return;
@@ -125,6 +137,7 @@ export class ExpensesPageComponent implements OnDestroy {
 
   edit(item: Expense) {
     this.editingId.set(item.id);
+    this.mobileFormOpen.set(true);
     const category = this.categories().find((entry) => entry.name === item.category);
 
     if (item.type === 'VARIABLE') {
@@ -171,7 +184,7 @@ export class ExpensesPageComponent implements OnDestroy {
   async remove(item: Expense) {
     const confirmed = await this.confirmDialog.open({
       title: 'Excluir despesa',
-      message: `Confirma a exclusão de "${item.description}"? Esta ação não poderá ser desfeita.`,
+      message: `Confirma a exclus\u00E3o de "${item.description}"? Esta a\u00E7\u00E3o n\u00E3o poder\u00E1 ser desfeita.`,
       confirmLabel: 'Excluir',
       cancelLabel: 'Cancelar',
       variant: 'danger'
@@ -183,7 +196,7 @@ export class ExpensesPageComponent implements OnDestroy {
 
     this.financeService.deleteExpense(item.id, item.recurring ? this.month() : undefined).subscribe({
       next: () => {
-        this.toastService.success('Despesa excluída com sucesso.');
+        this.toastService.success('Despesa exclu\u00EDda com sucesso.');
         this.load();
       },
       error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao excluir despesa.')
@@ -196,18 +209,28 @@ export class ExpensesPageComponent implements OnDestroy {
     this.quickForm.reset({ description: '', categoryId: null, paymentMethod: 'DEBIT', amount: null, dueDate: '' });
     this.fixedForm.reset({ description: '', categoryId: null, paymentMethod: 'DEBIT', amount: null, dueDate: '' });
     this.installmentForm.reset({ description: '', categoryId: null, amount: null, dueDate: '', installmentCount: null, firstInstallmentNextMonth: false });
+    if (this.compactLayout()) {
+      this.mobileFormOpen.set(false);
+    }
   }
 
   selectTab(tab: 'quick' | 'fixed' | 'installment') {
     this.activeTab.set(tab);
+    if (this.compactLayout() && !this.editingId()) {
+      this.mobileFormOpen.set(false);
+    }
+  }
+
+  toggleMobileForm() {
+    this.mobileFormOpen.update((value) => !value);
   }
 
   paymentMethodLabel(method: Expense['paymentMethod']) {
     switch (method) {
       case 'CREDIT':
-        return 'Crédito';
+        return 'Cr\u00E9dito';
       case 'DEBIT':
-        return 'Débito';
+        return 'D\u00E9bito';
       case 'PIX':
         return 'PIX';
       case 'CASH':
@@ -241,12 +264,12 @@ export class ExpensesPageComponent implements OnDestroy {
   private load() {
     this.financeService.getCategories().subscribe({
       next: (categories) => this.categories.set(categories),
-      error: () => this.toastService.error('Não foi possível carregar as categorias.')
+      error: () => this.toastService.error('N\u00E3o foi poss\u00EDvel carregar as categorias.')
     });
 
     this.financeService.getExpenses(this.month()).subscribe({
       next: (expenses) => this.expenses.set(expenses),
-      error: () => this.toastService.error('Não foi possível carregar as despesas.')
+      error: () => this.toastService.error('N\u00E3o foi poss\u00EDvel carregar as despesas.')
     });
   }
 
@@ -279,6 +302,14 @@ export class ExpensesPageComponent implements OnDestroy {
     }, 0);
   }
 
+  private readonly handleViewportResize = () => {
+    this.compactLayout.set(this.isCompactViewport());
+  };
+
+  private isCompactViewport(): boolean {
+    return typeof window !== 'undefined' && window.innerWidth <= 900;
+  }
+
   private observeActiveFormPanel() {
     this.resizeObserver?.disconnect();
 
@@ -296,3 +327,5 @@ export class ExpensesPageComponent implements OnDestroy {
     this.resizeObserver.observe(this.activeFormPanelElement);
   }
 }
+
+

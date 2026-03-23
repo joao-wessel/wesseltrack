@@ -91,10 +91,10 @@ export class DashboardPageComponent {
     switch (this.normalizeMethod(method)) {
       case 'CREDIT':
       case 'CREDITO':
-        return 'Crédito';
+        return 'Cr\u00E9dito';
       case 'DEBIT':
       case 'DEBITO':
-        return 'Débito';
+        return 'D\u00E9bito';
       case 'PIX':
         return 'PIX';
       case 'CASH':
@@ -116,7 +116,7 @@ export class DashboardPageComponent {
       return 'Dentro do ideal';
     }
     if (ratio <= 1) {
-      return 'Atenção';
+      return 'Aten\u00E7\u00E3o';
     }
     return 'Acima do ideal';
   }
@@ -126,7 +126,7 @@ export class DashboardPageComponent {
     if (status === 'Dentro do ideal') {
       return '#0f766e';
     }
-    if (status === 'Atenção') {
+    if (status === 'Aten\u00E7\u00E3o') {
       return '#b45309';
     }
     return '#b91c1c';
@@ -168,7 +168,7 @@ export class DashboardPageComponent {
       },
       error: (error: any) => {
         this.dashboard.set(null);
-        const message = error?.error?.error ?? 'Não foi possível carregar o painel.';
+        const message = error?.error?.error ?? 'N\u00E3o foi poss\u00EDvel carregar o painel.';
         this.loadError.set(message);
         this.toastService.error(message);
       }

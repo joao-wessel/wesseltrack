@@ -85,3 +85,31 @@ button {
 .danger-action {
   background: linear-gradient(135deg, #dc2626, #991b1b);
 }
+
+@media (max-width: 640px) {
+  .modal-backdrop {
+    padding: 0.75rem;
+    place-items: end stretch;
+  }
+
+  .modal-card {
+    width: 100%;
+    border-radius: 1.5rem 1.5rem 0 0;
+    padding: 1.1rem;
+  }
+
+  .modal-header {
+    gap: 0.75rem;
+  }
+
+  .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions button,
+  .primary-action {
+    width: 100%;
+    min-width: 0;
+  }
+}

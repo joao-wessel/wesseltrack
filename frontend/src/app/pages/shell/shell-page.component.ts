@@ -1,4 +1,4 @@
-﻿import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
@@ -20,6 +20,7 @@ export class ShellPageComponent {
     year: 'numeric'
   }).format(new Date()));
   readonly isAdmin = computed(() => this.authService.user()?.role === 'ADMIN');
+  readonly mobileNavOpen = signal(false);
   readonly passwordModalOpen = signal(false);
   readonly passwordForm = this.fb.nonNullable.group({
     currentPassword: this.fb.nonNullable.control('', [Validators.required]),
@@ -28,10 +29,12 @@ export class ShellPageComponent {
   });
 
   logout() {
+    this.closeMobileNav();
     this.authService.logout();
   }
 
   openPasswordModal() {
+    this.closeMobileNav();
     this.passwordModalOpen.set(true);
   }
 
@@ -53,7 +56,7 @@ export class ShellPageComponent {
 
     const { currentPassword, newPassword, confirmPassword } = this.passwordForm.getRawValue();
     if (newPassword !== confirmPassword) {
-      this.toastService.error('A confirmação da nova senha não confere.');
+      this.toastService.error('A confirma\u00E7\u00E3o da nova senha n\u00E3o confere.');
       return;
     }
 
@@ -64,5 +67,13 @@ export class ShellPageComponent {
       },
       error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao alterar a senha.')
     });
+  }
+
+  toggleMobileNav() {
+    this.mobileNavOpen.update((value) => !value);
+  }
+
+  closeMobileNav() {
+    this.mobileNavOpen.set(false);
   }
 }

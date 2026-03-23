@@ -1,13 +1,12 @@
-﻿import { AfterViewInit, Component, ElementRef, ViewChild, inject } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FinanceService } from '../../core/finance.service';
 import { ToastService } from '../../core/toast.service';
-import { CurrencyMaskDirective } from '../../core/currency-mask.directive';
 
 @Component({
   selector: 'app-goals-page',
-  imports: [CommonModule, ReactiveFormsModule, CurrencyMaskDirective],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './goals-page.component.html',
   styleUrl: './goals-page.component.scss'
 })
@@ -30,7 +29,7 @@ export class GoalsPageComponent implements AfterViewInit {
         this.form.patchValue(settings);
         this.syncMaskedInputs();
       },
-      error: () => this.toastService.error('Não foi possível carregar meta e limite.')
+      error: () => this.toastService.error('N\u00E3o foi poss\u00EDvel carregar meta e limite.')
     });
   }
 
@@ -41,12 +40,14 @@ export class GoalsPageComponent implements AfterViewInit {
   save() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.toastService.error('Preencha corretamente a meta de reserva e o limite no crédito.');
+      this.toastService.error('Preencha corretamente a meta de reserva e o limite no cr\u00E9dito.');
       return;
     }
 
     this.financeService.savePlanningSettings(this.form.getRawValue() as any).subscribe({
-      next: () => this.toastService.success('Meta e limite salvos com sucesso.'),
+      next: () => {
+        this.toastService.success('Meta e limite salvos com sucesso.');
+      },
       error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar meta e limite.')
     });
   }
