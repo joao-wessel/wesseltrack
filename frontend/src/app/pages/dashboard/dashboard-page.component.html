@@ -77,8 +77,10 @@
           </div>
 
           <div class="statement-period">
-            <small>Per&iacute;odo da fatura atual</small>
-            <strong>{{ data.currentStatement.periodStart | date:'dd/MM' }} - {{ data.currentStatement.periodEnd | date:'dd/MM' }}</strong>
+            <div class="statement-period-copy">
+              <small>Per&iacute;odo da fatura atual</small>
+              <strong>{{ data.currentStatement.periodStart | date:'dd/MM' }} - {{ data.currentStatement.periodEnd | date:'dd/MM' }}</strong>
+            </div>
             @if (data.dueStatement.paid) {
               <div class="bill-payment-status paid">
                 <strong>Fatura paga</strong>

@@ -49,14 +49,21 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
 .indicator-header p { color: #64748b; }
 .statement-period {
   display: grid;
-  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem 1rem;
+  align-items: center;
   padding: 0.9rem 1rem;
   border-radius: 1rem;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
 }
+.statement-period-copy {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
 .statement-pay-button {
-  justify-self: start;
+  justify-self: end;
 }
 .indicator-main { display: flex; justify-content: space-between; gap: 1rem; align-items: start; min-width: 0; }
 .indicator-value { font-size: 1.85rem; line-height: 1.1; }
@@ -95,7 +102,8 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
 .bill-payment-status {
   display: grid;
   gap: 0.2rem;
-  text-align: left;
+  justify-items: end;
+  text-align: right;
 }
 .bill-payment-status.paid strong {
   color: #0f766e;
@@ -176,6 +184,20 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
 
   .status-pill {
     width: fit-content;
+  }
+
+  .statement-period {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .statement-pay-button {
+    justify-self: start;
+  }
+
+  .bill-payment-status {
+    justify-items: start;
+    text-align: left;
   }
 
   .indicator-progress-labels {
