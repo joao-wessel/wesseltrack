@@ -35,7 +35,7 @@ public class DashboardService {
                 : planning.creditCardClosingDay();
 
         DashboardSummaryResponse.CreditCardStatementSummary currentStatement =
-                buildStatementSummary(month, creditCardClosingDay);
+                buildStatementSummary(month.plusMonths(1), creditCardClosingDay);
         DashboardSummaryResponse.CreditCardStatementSummary dueStatement =
                 buildStatementSummary(month.minusMonths(1), creditCardClosingDay);
 

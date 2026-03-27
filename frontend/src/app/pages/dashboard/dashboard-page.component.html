@@ -14,7 +14,7 @@
 
     <section class="summary-grid">
       <app-summary-card label="Receitas" [value]="data.totalIncome" hint="Entradas previstas no m&ecirc;s" />
-      <app-summary-card label="Sa&iacute;das do caixa" [value]="data.cashOutflow" hint="Sai neste m&ecirc;s por d&eacute;bito, PIX, dinheiro e faturas pagas" />
+      <app-summary-card label="Sa&iacute;das do caixa" [value]="data.cashOutflow" hint="Sa&iacute;das previstas no m&ecirc;s" />
       <app-summary-card label="Compras no cr&eacute;dito" [value]="data.creditPurchases" hint="Consumo lan&ccedil;ado no cart&atilde;o no m&ecirc;s" />
       <app-summary-card label="Meta" [value]="data.goalAmount" hint="Reserva mensal configurada" />
       <app-summary-card label="Saldo" [value]="totalAvailable()" hint="Receitas - sa&iacute;das de caixa - meta" />
@@ -111,18 +111,6 @@
           </div>
 
           <div class="indicator-metrics">
-            <div class="metric-card">
-              <small>Receitas do m&ecirc;s</small>
-              <strong>{{ data.totalIncome | currency:'BRL':'symbol':'1.2-2' }}</strong>
-            </div>
-            <div class="metric-card">
-              <small>Sa&iacute;das imediatas</small>
-              <strong>{{ data.nonCreditExpenses | currency:'BRL':'symbol':'1.2-2' }}</strong>
-            </div>
-            <div class="metric-card">
-              <small>Faturas pagas no m&ecirc;s</small>
-              <strong>{{ data.billPayments | currency:'BRL':'symbol':'1.2-2' }}</strong>
-            </div>
             <div class="metric-card">
               <small>Compras no cr&eacute;dito do m&ecirc;s</small>
               <strong>{{ data.creditPurchases | currency:'BRL':'symbol':'1.2-2' }}</strong>
