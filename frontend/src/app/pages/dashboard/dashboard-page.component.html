@@ -14,9 +14,10 @@
 
     <section class="summary-grid">
       <app-summary-card label="Receitas" [value]="data.totalIncome" hint="Entradas previstas no m&ecirc;s" />
-      <app-summary-card label="Despesas" [value]="data.totalExpenses" hint="Fixas, vari&aacute;veis e parceladas" />
+      <app-summary-card label="Sa&iacute;das do caixa" [value]="data.cashOutflow" hint="Sai neste m&ecirc;s, incluindo fatura do cart&atilde;o" />
+      <app-summary-card label="Compras no cr&eacute;dito" [value]="data.creditPurchases" hint="Consumo no cart&atilde;o lan&ccedil;ado no m&ecirc;s" />
       <app-summary-card label="Meta" [value]="data.goalAmount" hint="Reserva mensal configurada" />
-      <app-summary-card label="Saldo" [value]="totalAvailable()" hint="Receitas - despesas - meta" />
+      <app-summary-card label="Saldo" [value]="totalAvailable()" hint="Receitas - sa&iacute;das de caixa - meta" />
     </section>
 
     <section class="content-grid">
@@ -62,13 +63,13 @@
 
         <article class="panel action-panel">
           <div class="indicator-header">
-            <h3>Fatura m&aacute;xima do cart&atilde;o</h3>
-            <p>(Receitas do m&ecirc;s - contas fixas fora do cr&eacute;dito) ÷ 2</p>
+            <h3>Fatura do cart&atilde;o no m&ecirc;s</h3>
+            <p>Compras no cr&eacute;dito entram no caixa no vencimento, configurado para o dia {{ data.creditCardDueDay }}.</p>
           </div>
           <div class="indicator-main">
             <div>
-              <small>Teto recomendado</small>
-              <strong class="indicator-value">{{ data.maxCreditCardBill | currency:'BRL':'symbol':'1.2-2' }}</strong>
+              <small>Fatura que vence no m&ecirc;s</small>
+              <strong class="indicator-value">{{ data.creditCardBillDue | currency:'BRL':'symbol':'1.2-2' }}</strong>
             </div>
             <span class="status-pill" [style.color]="creditBillStatusTone()" [style.background]="'color-mix(in srgb, ' + creditBillStatusTone() + ' 12%, white)'">
               {{ creditBillStatus() }}
@@ -80,8 +81,8 @@
               <span [style.width.%]="creditUsageShare()" [style.background]="creditBillStatusTone()"></span>
             </div>
             <div class="indicator-progress-labels">
-              <small>Fatura atual no cr&eacute;dito</small>
-              <strong>{{ data.creditUsage.spent | currency:'BRL':'symbol':'1.2-2' }}</strong>
+              <small>Comparativo com o teto recomendado</small>
+              <strong>{{ data.maxCreditCardBill | currency:'BRL':'symbol':'1.2-2' }}</strong>
             </div>
           </div>
 
@@ -91,8 +92,12 @@
               <strong>{{ data.totalIncome | currency:'BRL':'symbol':'1.2-2' }}</strong>
             </div>
             <div class="metric-card">
-              <small>Fixas fora do cr&eacute;dito</small>
-              <strong>{{ data.fixedExpensesOutsideCredit | currency:'BRL':'symbol':'1.2-2' }}</strong>
+              <small>Sa&iacute;das imediatas</small>
+              <strong>{{ data.nonCreditExpenses | currency:'BRL':'symbol':'1.2-2' }}</strong>
+            </div>
+            <div class="metric-card">
+              <small>Compras no cr&eacute;dito do m&ecirc;s</small>
+              <strong>{{ data.creditPurchases | currency:'BRL':'symbol':'1.2-2' }}</strong>
             </div>
             <div class="metric-card">
               <small>{{ creditUsageDelta() >= 0 ? 'Folga no teto' : 'Acima do teto' }}</small>

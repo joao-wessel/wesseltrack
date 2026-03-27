@@ -24,6 +24,7 @@ export class DashboardPageComponent {
   readonly dashboard = signal<DashboardSummary | null>(null);
   readonly loadError = signal<string | null>(null);
   readonly totalAvailable = computed(() => this.dashboard()?.netBalance ?? 0);
+  readonly totalCashOutflow = computed(() => this.dashboard()?.cashOutflow ?? 0);
   readonly totalCategoryExpenses = computed(() =>
     (this.dashboard()?.byCategory ?? []).reduce((sum, item) => sum + item.total, 0)
   );
@@ -38,7 +39,7 @@ export class DashboardPageComponent {
       return 0;
     }
 
-    return Math.min((data.creditUsage.spent / data.maxCreditCardBill) * 100, 100);
+    return Math.min((data.creditCardBillDue / data.maxCreditCardBill) * 100, 100);
   });
   readonly creditUsageDelta = computed(() => {
     const data = this.dashboard();
@@ -46,7 +47,7 @@ export class DashboardPageComponent {
       return 0;
     }
 
-    return data.maxCreditCardBill - data.creditUsage.spent;
+    return data.maxCreditCardBill - data.creditCardBillDue;
   });
 
   constructor() {

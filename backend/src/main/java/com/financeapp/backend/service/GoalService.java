@@ -8,10 +8,12 @@ import com.financeapp.backend.dto.MonthlyGoalRequest;
 import com.financeapp.backend.dto.MonthlyPlanningResponse;
 import com.financeapp.backend.dto.PlanningSettingsRequest;
 import com.financeapp.backend.dto.PlanningSettingsResponse;
+import com.financeapp.backend.repository.AppUserRepository;
 import com.financeapp.backend.repository.MonthlyGoalRepository;
 import com.financeapp.backend.repository.MonthlyPaymentLimitRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
@@ -23,10 +25,12 @@ import java.util.Map;
 public class GoalService {
 
     private static final YearMonth LEGACY_SETTINGS_MONTH = YearMonth.of(2000, 1);
+    private static final int DEFAULT_CREDIT_CARD_DUE_DAY = 10;
 
     private final MonthlyGoalRepository monthlyGoalRepository;
     private final MonthlyPaymentLimitRepository monthlyPaymentLimitRepository;
     private final CurrentUserService currentUserService;
+    private final AppUserRepository appUserRepository;
 
     public BigDecimal getGoal(YearMonth month) {
         AppUser user = currentUserService.requireCurrentUser();
@@ -52,7 +56,8 @@ public class GoalService {
                 limits.get(PaymentMethod.CREDIT),
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
-                BigDecimal.ZERO
+                BigDecimal.ZERO,
+                resolveCreditCardDueDay(user)
         );
     }
 
@@ -61,9 +66,10 @@ public class GoalService {
         YearMonth currentMonth = YearMonth.now();
         BigDecimal goalAmount = resolveGoalAmount(user, currentMonth);
         Map<PaymentMethod, BigDecimal> limits = loadLimits(user, currentMonth);
-        return new PlanningSettingsResponse(goalAmount, limits.get(PaymentMethod.CREDIT));
+        return new PlanningSettingsResponse(goalAmount, limits.get(PaymentMethod.CREDIT), resolveCreditCardDueDay(user));
     }
 
+    @Transactional
     public PlanningSettingsResponse saveSettings(PlanningSettingsRequest request) {
         AppUser user = currentUserService.requireCurrentUser();
         YearMonth currentMonth = YearMonth.now();
@@ -72,7 +78,14 @@ public class GoalService {
         saveLimit(user, currentMonth, PaymentMethod.DEBIT, BigDecimal.ZERO);
         saveLimit(user, currentMonth, PaymentMethod.PIX, BigDecimal.ZERO);
         saveLimit(user, currentMonth, PaymentMethod.CASH, BigDecimal.ZERO);
+        user.setCreditCardDueDay(request.creditCardDueDay());
+        appUserRepository.save(user);
         return getSettings();
+    }
+
+    public int getCreditCardDueDay() {
+        AppUser user = currentUserService.requireCurrentUser();
+        return resolveCreditCardDueDay(user);
     }
 
     private BigDecimal resolveGoalAmount(AppUser user, YearMonth month) {
@@ -80,6 +93,14 @@ public class GoalService {
                 .or(() -> monthlyGoalRepository.findByUserAndMonthKey(user, LEGACY_SETTINGS_MONTH))
                 .map(MonthlyGoal::getAmount)
                 .orElse(BigDecimal.ZERO);
+    }
+
+    private int resolveCreditCardDueDay(AppUser user) {
+        Integer dueDay = user.getCreditCardDueDay();
+        if (dueDay == null || dueDay < 1 || dueDay > 31) {
+            return DEFAULT_CREDIT_CARD_DUE_DAY;
+        }
+        return dueDay;
     }
 
     private void saveLimit(AppUser user, YearMonth month, PaymentMethod paymentMethod, BigDecimal amount) {

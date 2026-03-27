@@ -7,7 +7,7 @@
 button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weight: 700; }
 .ghost { border: 1px solid #cbd5e1; background: #fff; color: #0f172a; }
 .month-pill { background: rgba(15, 118, 110, 0.12); color: #0f766e; font-weight: 700; }
-.summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.summary-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 .content-grid { grid-template-columns: 1.1fr 0.9fr; align-items: stretch; }
 .left-stack { grid-template-rows: 1fr 1fr; height: 100%; }
 .left-stack > .panel,
@@ -83,7 +83,7 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
 }
 .indicator-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 0.75rem;
   min-width: 0;
 }

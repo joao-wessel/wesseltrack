@@ -11,7 +11,8 @@ public record MonthlyPlanningResponse(
         BigDecimal creditLimit,
         BigDecimal debitLimit,
         BigDecimal pixLimit,
-        BigDecimal cashLimit
+        BigDecimal cashLimit,
+        Integer creditCardDueDay
 ) {
     public BigDecimal limitFor(PaymentMethod paymentMethod) {
         return switch (paymentMethod) {

@@ -8,11 +8,13 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +27,27 @@ public class DashboardService {
     public DashboardSummaryResponse getMonthlySummary(YearMonth month) {
         var incomes = incomeService.list(month);
         var expenses = expenseService.list(month);
+        var previousMonthExpenses = expenseService.list(month.minusMonths(1));
         var planning = goalService.getPlanning(month);
         BigDecimal goal = planning.goalAmount() == null ? BigDecimal.ZERO : planning.goalAmount();
+        int creditCardDueDay = planning.creditCardDueDay() == null ? goalService.getCreditCardDueDay() : planning.creditCardDueDay();
 
         BigDecimal totalIncome = incomes.stream().map(income -> income.amount()).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalExpenses = expenses.stream().map(expense -> expense.amount()).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal nonCreditExpenses = expenses.stream()
+                .filter(expense -> expense.paymentMethod() != PaymentMethod.CREDIT)
+                .map(expense -> expense.amount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal creditPurchases = expenses.stream()
+                .filter(expense -> expense.paymentMethod() == PaymentMethod.CREDIT)
+                .map(expense -> expense.amount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal creditCardBillDue = Stream.concat(previousMonthExpenses.stream(), expenses.stream())
+                .filter(expense -> expense.paymentMethod() == PaymentMethod.CREDIT)
+                .filter(expense -> YearMonth.from(resolveCreditBillDueDate(expense.dueDate(), creditCardDueDay)).equals(month))
+                .map(expense -> expense.amount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal cashOutflow = nonCreditExpenses.add(creditCardBillDue);
         BigDecimal fixedExpensesOutsideCredit = expenses.stream()
                 .filter(expense -> expense.type() == ExpenseType.FIXED)
                 .filter(expense -> expense.paymentMethod() != PaymentMethod.CREDIT)
@@ -75,25 +93,44 @@ public class DashboardService {
                 })
                 .toList();
 
-        DashboardSummaryResponse.PaymentMethodUsage creditUsage = usages.stream()
-                .filter(item -> item.method().equals(labelFor(PaymentMethod.CREDIT)))
-                .findFirst()
-                .orElse(new DashboardSummaryResponse.PaymentMethodUsage(labelFor(PaymentMethod.CREDIT), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+        BigDecimal creditLimit = planning.limitFor(PaymentMethod.CREDIT) == null ? BigDecimal.ZERO : planning.limitFor(PaymentMethod.CREDIT);
+        DashboardSummaryResponse.PaymentMethodUsage creditUsage = new DashboardSummaryResponse.PaymentMethodUsage(
+                labelFor(PaymentMethod.CREDIT),
+                creditCardBillDue,
+                creditLimit,
+                creditLimit.subtract(creditCardBillDue)
+        );
 
         return new DashboardSummaryResponse(
                 month.toString(),
                 totalIncome,
                 totalExpenses,
+                nonCreditExpenses,
+                creditPurchases,
+                creditCardBillDue,
+                cashOutflow,
                 goal,
-                totalIncome.subtract(totalExpenses).subtract(goal),
+                totalIncome.subtract(cashOutflow).subtract(goal),
                 maxCreditCardBill,
                 fixedExpensesOutsideCredit,
+                creditCardDueDay,
                 creditUsage,
                 List.copyOf(categoryTotals.values()),
                 usages,
                 incomes,
                 expenses
         );
+    }
+
+    private LocalDate resolveCreditBillDueDate(LocalDate expenseDate, int dueDay) {
+        int safeDueDay = Math.min(Math.max(dueDay, 1), expenseDate.lengthOfMonth());
+        LocalDate currentMonthDueDate = expenseDate.withDayOfMonth(safeDueDay);
+        if (!expenseDate.isAfter(currentMonthDueDate)) {
+            return currentMonthDueDate;
+        }
+
+        LocalDate nextMonthReference = expenseDate.plusMonths(1);
+        return nextMonthReference.withDayOfMonth(Math.min(Math.max(dueDay, 1), nextMonthReference.lengthOfMonth()));
     }
 
     private String labelFor(PaymentMethod method) {

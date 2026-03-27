@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 public record PlanningSettingsResponse(
         BigDecimal reserveGoal,
-        BigDecimal creditLimit
+        BigDecimal creditLimit,
+        Integer creditCardDueDay
 ) {
 }

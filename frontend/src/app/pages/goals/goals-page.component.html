@@ -17,6 +17,12 @@
       @if (form.controls.creditLimit.touched && form.controls.creditLimit.invalid) { <small class="error">Informe um valor v&aacute;lido.</small> }
     </label>
 
+    <label>
+      <span>Vencimento do cart&atilde;o</span>
+      <input type="number" formControlName="creditCardDueDay" min="1" max="31" placeholder="Dia do m&ecirc;s" />
+      @if (form.controls.creditCardDueDay.touched && form.controls.creditCardDueDay.invalid) { <small class="error">Informe um dia entre 1 e 31.</small> }
+    </label>
+
     <button type="submit">Salvar par&acirc;metros</button>
   </form>
 </section>

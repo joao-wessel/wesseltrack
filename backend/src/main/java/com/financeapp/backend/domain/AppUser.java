@@ -31,6 +31,9 @@ public class AppUser {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    @Column(name = "credit_card_due_day")
+    private Integer creditCardDueDay;
+
     @Column(nullable = false)
     private Instant createdAt;
 }

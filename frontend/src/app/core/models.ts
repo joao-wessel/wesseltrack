@@ -57,10 +57,15 @@ export interface DashboardSummary {
   month: string;
   totalIncome: number;
   totalExpenses: number;
+  nonCreditExpenses: number;
+  creditPurchases: number;
+  creditCardBillDue: number;
+  cashOutflow: number;
   goalAmount: number;
   netBalance: number;
   maxCreditCardBill: number;
   fixedExpensesOutsideCredit: number;
+  creditCardDueDay: number;
   creditUsage: {
     method: string;
     spent: number;
@@ -76,4 +81,5 @@ export interface DashboardSummary {
 export interface PlanningSettings {
   reserveGoal: number;
   creditLimit: number;
+  creditCardDueDay: number;
 }
