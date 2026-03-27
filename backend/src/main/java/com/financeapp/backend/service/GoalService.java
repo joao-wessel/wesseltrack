@@ -25,7 +25,7 @@ import java.util.Map;
 public class GoalService {
 
     private static final YearMonth LEGACY_SETTINGS_MONTH = YearMonth.of(2000, 1);
-    private static final int DEFAULT_CREDIT_CARD_DUE_DAY = 10;
+    private static final int DEFAULT_CREDIT_CARD_CLOSING_DAY = 10;
 
     private final MonthlyGoalRepository monthlyGoalRepository;
     private final MonthlyPaymentLimitRepository monthlyPaymentLimitRepository;
@@ -57,7 +57,7 @@ public class GoalService {
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
-                resolveCreditCardDueDay(user)
+                resolveCreditCardClosingDay(user)
         );
     }
 
@@ -66,7 +66,7 @@ public class GoalService {
         YearMonth currentMonth = YearMonth.now();
         BigDecimal goalAmount = resolveGoalAmount(user, currentMonth);
         Map<PaymentMethod, BigDecimal> limits = loadLimits(user, currentMonth);
-        return new PlanningSettingsResponse(goalAmount, limits.get(PaymentMethod.CREDIT), resolveCreditCardDueDay(user));
+        return new PlanningSettingsResponse(goalAmount, limits.get(PaymentMethod.CREDIT), resolveCreditCardClosingDay(user));
     }
 
     @Transactional
@@ -78,14 +78,14 @@ public class GoalService {
         saveLimit(user, currentMonth, PaymentMethod.DEBIT, BigDecimal.ZERO);
         saveLimit(user, currentMonth, PaymentMethod.PIX, BigDecimal.ZERO);
         saveLimit(user, currentMonth, PaymentMethod.CASH, BigDecimal.ZERO);
-        user.setCreditCardDueDay(request.creditCardDueDay());
+        user.setCreditCardClosingDay(request.creditCardClosingDay());
         appUserRepository.save(user);
         return getSettings();
     }
 
-    public int getCreditCardDueDay() {
+    public int getCreditCardClosingDay() {
         AppUser user = currentUserService.requireCurrentUser();
-        return resolveCreditCardDueDay(user);
+        return resolveCreditCardClosingDay(user);
     }
 
     private BigDecimal resolveGoalAmount(AppUser user, YearMonth month) {
@@ -95,12 +95,12 @@ public class GoalService {
                 .orElse(BigDecimal.ZERO);
     }
 
-    private int resolveCreditCardDueDay(AppUser user) {
-        Integer dueDay = user.getCreditCardDueDay();
-        if (dueDay == null || dueDay < 1 || dueDay > 31) {
-            return DEFAULT_CREDIT_CARD_DUE_DAY;
+    private int resolveCreditCardClosingDay(AppUser user) {
+        Integer closingDay = user.getCreditCardClosingDay();
+        if (closingDay == null || closingDay < 1 || closingDay > 31) {
+            return DEFAULT_CREDIT_CARD_CLOSING_DAY;
         }
-        return dueDay;
+        return closingDay;
     }
 
     private void saveLimit(AppUser user, YearMonth month, PaymentMethod paymentMethod, BigDecimal amount) {

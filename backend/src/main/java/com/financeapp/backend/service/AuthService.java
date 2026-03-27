@@ -45,7 +45,7 @@ public class AuthService {
                 .username(request.username().trim().toLowerCase())
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .role(role)
-                .creditCardDueDay(10)
+                .creditCardClosingDay(10)
                 .createdAt(Instant.now())
                 .build());
     }

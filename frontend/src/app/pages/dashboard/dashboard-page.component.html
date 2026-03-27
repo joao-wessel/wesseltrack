@@ -14,8 +14,8 @@
 
     <section class="summary-grid">
       <app-summary-card label="Receitas" [value]="data.totalIncome" hint="Entradas previstas no m&ecirc;s" />
-      <app-summary-card label="Sa&iacute;das do caixa" [value]="data.cashOutflow" hint="Sai neste m&ecirc;s, incluindo fatura do cart&atilde;o" />
-      <app-summary-card label="Compras no cr&eacute;dito" [value]="data.creditPurchases" hint="Consumo no cart&atilde;o lan&ccedil;ado no m&ecirc;s" />
+      <app-summary-card label="Sa&iacute;das do caixa" [value]="data.cashOutflow" hint="Sai neste m&ecirc;s por d&eacute;bito, PIX, dinheiro e faturas pagas" />
+      <app-summary-card label="Compras no cr&eacute;dito" [value]="data.creditPurchases" hint="Consumo lan&ccedil;ado no cart&atilde;o no m&ecirc;s" />
       <app-summary-card label="Meta" [value]="data.goalAmount" hint="Reserva mensal configurada" />
       <app-summary-card label="Saldo" [value]="totalAvailable()" hint="Receitas - sa&iacute;das de caixa - meta" />
     </section>
@@ -63,17 +63,23 @@
 
         <article class="panel action-panel">
           <div class="indicator-header">
-            <h3>Fatura do cart&atilde;o no m&ecirc;s</h3>
-            <p>Compras no cr&eacute;dito entram no caixa no vencimento, configurado para o dia {{ data.creditCardDueDay }}.</p>
+            <h3>Cart&atilde;o de cr&eacute;dito</h3>
+            <p>O consumo entra na fatura pelo fechamento do dia {{ data.creditCardClosingDay }} e s&oacute; vira caixa quando a fatura &eacute; paga.</p>
           </div>
           <div class="indicator-main">
             <div>
-              <small>Fatura que vence no m&ecirc;s</small>
-              <strong class="indicator-value">{{ data.creditCardBillDue | currency:'BRL':'symbol':'1.2-2' }}</strong>
+              <small>Fatura atual em forma&ccedil;&atilde;o</small>
+              <strong class="indicator-value">{{ data.currentStatement.amount | currency:'BRL':'symbol':'1.2-2' }}</strong>
             </div>
             <span class="status-pill" [style.color]="creditBillStatusTone()" [style.background]="'color-mix(in srgb, ' + creditBillStatusTone() + ' 12%, white)'">
               {{ creditBillStatus() }}
             </span>
+          </div>
+
+          <div class="statement-period">
+            <small>Per&iacute;odo da fatura atual</small>
+            <strong>{{ data.currentStatement.periodStart | date:'dd/MM' }} - {{ data.currentStatement.periodEnd | date:'dd/MM' }}</strong>
+            <small>Pagamento previsto para {{ data.currentStatement.dueMonth }}</small>
           </div>
 
           <div class="indicator-progress">
@@ -81,9 +87,27 @@
               <span [style.width.%]="creditUsageShare()" [style.background]="creditBillStatusTone()"></span>
             </div>
             <div class="indicator-progress-labels">
-              <small>Comparativo com o teto recomendado</small>
+              <small>Comparativo com o teto recomendado para a fatura em forma&ccedil;&atilde;o</small>
               <strong>{{ data.maxCreditCardBill | currency:'BRL':'symbol':'1.2-2' }}</strong>
             </div>
+          </div>
+
+          <div class="bill-payment-card">
+            <div>
+              <small>Fatura a pagar neste m&ecirc;s</small>
+              <strong>{{ data.dueStatement.amount | currency:'BRL':'symbol':'1.2-2' }}</strong>
+              <small>Per&iacute;odo {{ data.dueStatement.periodStart | date:'dd/MM' }} - {{ data.dueStatement.periodEnd | date:'dd/MM' }}</small>
+            </div>
+            @if (data.dueStatement.paid) {
+              <div class="bill-payment-status paid">
+                <strong>Fatura paga</strong>
+                <small>{{ data.dueStatement.paidAt | date:'dd/MM/yyyy' }}</small>
+              </div>
+            } @else {
+              <button type="button" [disabled]="payingStatement() || data.dueStatement.amount <= 0" (click)="payDueStatement()">
+                {{ payingStatement() ? 'Pagando...' : 'Pagar fatura' }}
+              </button>
+            }
           </div>
 
           <div class="indicator-metrics">
@@ -94,6 +118,10 @@
             <div class="metric-card">
               <small>Sa&iacute;das imediatas</small>
               <strong>{{ data.nonCreditExpenses | currency:'BRL':'symbol':'1.2-2' }}</strong>
+            </div>
+            <div class="metric-card">
+              <small>Faturas pagas no m&ecirc;s</small>
+              <strong>{{ data.billPayments | currency:'BRL':'symbol':'1.2-2' }}</strong>
             </div>
             <div class="metric-card">
               <small>Compras no cr&eacute;dito do m&ecirc;s</small>

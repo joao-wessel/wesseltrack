@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     @EntityGraph(attributePaths = "category")
-    List<Expense> findAllByUserAndDueDateBetweenOrderByDueDateAsc(AppUser user, LocalDate start, LocalDate end);
+    List<Expense> findAllByUserAndDueDateBetweenAndCreditCardBillPaymentFalseOrderByDueDateAsc(AppUser user, LocalDate start, LocalDate end);
 
     @EntityGraph(attributePaths = "category")
     Optional<Expense> findByIdAndUser(Long id, AppUser user);
@@ -23,10 +23,22 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     long countByUserAndCategory(AppUser user, Category category);
 
     @EntityGraph(attributePaths = "category")
-    List<Expense> findAllByUserAndRecurringTrueAndTypeAndDueDateLessThanEqualOrderByDueDateAsc(AppUser user, ExpenseType type, LocalDate end);
+    List<Expense> findAllByUserAndRecurringTrueAndTypeAndDueDateLessThanEqualAndCreditCardBillPaymentFalseOrderByDueDateAsc(AppUser user, ExpenseType type, LocalDate end);
 
     @EntityGraph(attributePaths = "category")
-    List<Expense> findAllByUserAndDueDateBetweenAndTypeAndRecurringTrueOrderByDueDateAsc(AppUser user, LocalDate start, LocalDate end, ExpenseType type);
+    List<Expense> findAllByUserAndDueDateBetweenAndTypeAndRecurringTrueAndCreditCardBillPaymentFalseOrderByDueDateAsc(AppUser user, LocalDate start, LocalDate end, ExpenseType type);
+
+    @EntityGraph(attributePaths = "category")
+    List<Expense> findAllByUserAndDueDateBetweenAndPaymentMethodAndCreditCardBillPaymentFalseOrderByDueDateAsc(
+            AppUser user,
+            LocalDate start,
+            LocalDate end,
+            PaymentMethod paymentMethod
+    );
+
+    List<Expense> findAllByUserAndDueDateBetweenAndCreditCardBillPaymentTrueOrderByDueDateAsc(AppUser user, LocalDate start, LocalDate end);
+
+    Optional<Expense> findByUserAndCreditCardBillPaymentTrueAndCreditCardStatementMonth(AppUser user, java.time.YearMonth statementMonth);
 
     boolean existsByUserAndCategoryAndTypeAndPaymentMethodAndPaymentSourceAndAmountAndDescriptionAndDueDate(
             AppUser user,

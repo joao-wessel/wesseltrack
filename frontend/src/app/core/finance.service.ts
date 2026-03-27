@@ -14,6 +14,10 @@ export class FinanceService {
     return this.http.get<DashboardSummary>(`${this.apiUrl}/dashboard/monthly`, { params: { month } });
   }
 
+  payCreditCardBill(month: string) {
+    return this.http.post<DashboardSummary>(`${this.apiUrl}/dashboard/credit-card/pay`, null, { params: { month } });
+  }
+
   getCategories() {
     return this.http.get<Category[]>(`${this.apiUrl}/categories`);
   }

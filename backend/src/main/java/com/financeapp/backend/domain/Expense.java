@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 
 @Entity
 @Table(name = "expense")
@@ -64,4 +65,11 @@ public class Expense {
 
     @Column(length = 64)
     private String installmentGroup;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean creditCardBillPayment = false;
+
+    @Column(name = "credit_card_statement_month")
+    private YearMonth creditCardStatementMonth;
 }

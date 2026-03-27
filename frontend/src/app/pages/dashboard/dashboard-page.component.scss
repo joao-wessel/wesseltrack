@@ -47,6 +47,14 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
 .indicator-header h3,
 .indicator-header p { margin: 0; }
 .indicator-header p { color: #64748b; }
+.statement-period {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
 .indicator-main { display: flex; justify-content: space-between; gap: 1rem; align-items: start; min-width: 0; }
 .indicator-value { font-size: 1.85rem; line-height: 1.1; }
 .status-pill {
@@ -80,6 +88,28 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
 }
 .indicator-progress-labels small {
   color: #64748b;
+}
+.bill-payment-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+}
+.bill-payment-card > div {
+  display: grid;
+  gap: 0.25rem;
+}
+.bill-payment-status {
+  display: grid;
+  gap: 0.2rem;
+  text-align: right;
+}
+.bill-payment-status.paid strong {
+  color: #0f766e;
 }
 .indicator-metrics {
   display: grid;
@@ -165,6 +195,14 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
 
   .indicator-progress-labels small {
     overflow-wrap: anywhere;
+  }
+
+  .bill-payment-card {
+    display: grid;
+  }
+
+  .bill-payment-status {
+    text-align: left;
   }
 }
 

@@ -23,8 +23,8 @@ export class DashboardPageComponent {
   readonly activeMonthLabel = computed(() => this.formatMonthLabel(this.activeMonth()));
   readonly dashboard = signal<DashboardSummary | null>(null);
   readonly loadError = signal<string | null>(null);
+  readonly payingStatement = signal(false);
   readonly totalAvailable = computed(() => this.dashboard()?.netBalance ?? 0);
-  readonly totalCashOutflow = computed(() => this.dashboard()?.cashOutflow ?? 0);
   readonly totalCategoryExpenses = computed(() =>
     (this.dashboard()?.byCategory ?? []).reduce((sum, item) => sum + item.total, 0)
   );
@@ -39,7 +39,7 @@ export class DashboardPageComponent {
       return 0;
     }
 
-    return Math.min((data.creditCardBillDue / data.maxCreditCardBill) * 100, 100);
+    return Math.min((data.currentStatement.amount / data.maxCreditCardBill) * 100, 100);
   });
   readonly creditUsageDelta = computed(() => {
     const data = this.dashboard();
@@ -47,7 +47,7 @@ export class DashboardPageComponent {
       return 0;
     }
 
-    return data.maxCreditCardBill - data.creditCardBillDue;
+    return data.maxCreditCardBill - data.currentStatement.amount;
   });
 
   constructor() {
@@ -69,6 +69,25 @@ export class DashboardPageComponent {
   paymentShare(total: number) {
     const grandTotal = this.totalPaymentExpenses();
     return grandTotal === 0 ? 0 : (total / grandTotal) * 100;
+  }
+
+  payDueStatement() {
+    if (this.payingStatement()) {
+      return;
+    }
+
+    this.payingStatement.set(true);
+    this.financeService.payCreditCardBill(this.activeMonth()).subscribe({
+      next: (dashboard) => {
+        this.dashboard.set(dashboard);
+        this.toastService.success('Fatura paga e lancada no caixa com sucesso.');
+        this.payingStatement.set(false);
+      },
+      error: (error: any) => {
+        this.toastService.error(error?.error?.error ?? 'Nao foi possivel pagar a fatura.');
+        this.payingStatement.set(false);
+      }
+    });
   }
 
   paymentMethodColor(method: string) {
@@ -113,7 +132,7 @@ export class DashboardPageComponent {
       return 'Sem dados';
     }
 
-    const ratio = data.maxCreditCardBill <= 0 ? 0 : data.creditUsage.spent / data.maxCreditCardBill;
+    const ratio = data.maxCreditCardBill <= 0 ? 0 : data.currentStatement.amount / data.maxCreditCardBill;
     if (ratio <= 0.75) {
       return 'Dentro do ideal';
     }

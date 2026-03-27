@@ -59,13 +59,33 @@ export interface DashboardSummary {
   totalExpenses: number;
   nonCreditExpenses: number;
   creditPurchases: number;
-  creditCardBillDue: number;
+  billPayments: number;
   cashOutflow: number;
   goalAmount: number;
   netBalance: number;
   maxCreditCardBill: number;
   fixedExpensesOutsideCredit: number;
-  creditCardDueDay: number;
+  creditCardClosingDay: number;
+  currentStatement: {
+    statementMonth: string;
+    dueMonth: string;
+    periodStart: string;
+    periodEnd: string;
+    amount: number;
+    paid: boolean;
+    paidAt: string | null;
+    paymentExpenseId: number | null;
+  };
+  dueStatement: {
+    statementMonth: string;
+    dueMonth: string;
+    periodStart: string;
+    periodEnd: string;
+    amount: number;
+    paid: boolean;
+    paidAt: string | null;
+    paymentExpenseId: number | null;
+  };
   creditUsage: {
     method: string;
     spent: number;
@@ -81,5 +101,5 @@ export interface DashboardSummary {
 export interface PlanningSettings {
   reserveGoal: number;
   creditLimit: number;
-  creditCardDueDay: number;
+  creditCardClosingDay: number;
 }

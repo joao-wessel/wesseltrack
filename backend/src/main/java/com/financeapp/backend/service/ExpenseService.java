@@ -34,8 +34,14 @@ public class ExpenseService {
     @Transactional(readOnly = true)
     public List<ExpenseResponse> list(YearMonth month) {
         AppUser user = currentUserService.requireCurrentUser();
-        List<Expense> actual = expenseRepository.findAllByUserAndDueDateBetweenOrderByDueDateAsc(user, month.atDay(1), month.atEndOfMonth());
-        List<Expense> recurringFixed = expenseRepository.findAllByUserAndRecurringTrueAndTypeAndDueDateLessThanEqualOrderByDueDateAsc(user, ExpenseType.FIXED, month.atEndOfMonth());
+        List<Expense> actual = expenseRepository
+                .findAllByUserAndDueDateBetweenAndCreditCardBillPaymentFalseOrderByDueDateAsc(user, month.atDay(1), month.atEndOfMonth());
+        List<Expense> recurringFixed = expenseRepository
+                .findAllByUserAndRecurringTrueAndTypeAndDueDateLessThanEqualAndCreditCardBillPaymentFalseOrderByDueDateAsc(
+                        user,
+                        ExpenseType.FIXED,
+                        month.atEndOfMonth()
+                );
 
         List<ExpenseResponse> responses = new ArrayList<>(actual.stream().map(this::map).toList());
         for (Expense expense : recurringFixed) {
@@ -47,7 +53,8 @@ public class ExpenseService {
                 continue;
             }
 
-            LocalDate projectedDate = month.atDay(1).withDayOfMonth(Math.min(expense.getDueDate().getDayOfMonth(), month.lengthOfMonth()));
+            LocalDate projectedDate = month.atDay(1)
+                    .withDayOfMonth(Math.min(expense.getDueDate().getDayOfMonth(), month.lengthOfMonth()));
             boolean exists = actual.stream().anyMatch(current ->
                     current.getType() == ExpenseType.FIXED
                             && Objects.equals(current.getCategory(), expense.getCategory())
@@ -104,6 +111,8 @@ public class ExpenseService {
                 .recurring(request.type() == ExpenseType.FIXED && request.recurring())
                 .installmentNumber(1)
                 .installmentCount(1)
+                .creditCardBillPayment(false)
+                .creditCardStatementMonth(null)
                 .build());
         return List.of(map(expense));
     }
@@ -112,10 +121,14 @@ public class ExpenseService {
     public ExpenseResponse update(Long id, ExpenseRequest request) {
         AppUser user = currentUserService.requireCurrentUser();
         Expense expense = expenseRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new EntityNotFoundException("Despesa nÃ£o encontrada."));
+                .orElseThrow(() -> new EntityNotFoundException("Despesa nao encontrada."));
+
+        if (expense.isCreditCardBillPayment()) {
+            throw new IllegalArgumentException("Pagamentos de fatura devem ser gerenciados pelo painel do cartao.");
+        }
 
         if (expense.getType() == ExpenseType.INSTALLMENT && expense.getInstallmentCount() > 1) {
-            throw new IllegalArgumentException("Edite parcelas individualmente apenas quando necessÃ¡rio. O lote parcelado nÃ£o Ã© recalculado retroativamente.");
+            throw new IllegalArgumentException("Edite parcelas individualmente apenas quando necessario.");
         }
 
         Category category = requireCategory(request, user);
@@ -133,6 +146,8 @@ public class ExpenseService {
         expense.setDueDate(request.dueDate());
         expense.setEndDate(null);
         expense.setRecurring(request.type() == ExpenseType.FIXED && request.recurring());
+        expense.setCreditCardBillPayment(false);
+        expense.setCreditCardStatementMonth(null);
 
         if (request.type() != ExpenseType.INSTALLMENT) {
             expense.setInstallmentNumber(1);
@@ -147,7 +162,11 @@ public class ExpenseService {
     public void delete(Long id, YearMonth effectiveMonth) {
         AppUser user = currentUserService.requireCurrentUser();
         Expense expense = expenseRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new EntityNotFoundException("Despesa nÃ£o encontrada."));
+                .orElseThrow(() -> new EntityNotFoundException("Despesa nao encontrada."));
+
+        if (expense.isCreditCardBillPayment()) {
+            throw new IllegalArgumentException("Pagamentos de fatura devem ser gerenciados pelo painel do cartao.");
+        }
 
         if (!(expense.isRecurring() && expense.getType() == ExpenseType.FIXED)) {
             expenseRepository.delete(expense);
@@ -164,6 +183,59 @@ public class ExpenseService {
         expenseRepository.save(expense);
     }
 
+    @Transactional
+    public ExpenseResponse createCreditCardBillPayment(YearMonth statementMonth, BigDecimal amount, LocalDate paymentDate) {
+        AppUser user = currentUserService.requireCurrentUser();
+
+        if (amount == null || amount.signum() <= 0) {
+            throw new IllegalArgumentException("Nao ha valor pendente para pagar nesta fatura.");
+        }
+
+        if (expenseRepository.findByUserAndCreditCardBillPaymentTrueAndCreditCardStatementMonth(user, statementMonth).isPresent()) {
+            throw new IllegalArgumentException("Esta fatura ja foi paga.");
+        }
+
+        Category category = categoryService.findOrCreateUncategorized(user);
+        Expense paymentExpense = expenseRepository.save(Expense.builder()
+                .user(user)
+                .category(category)
+                .type(ExpenseType.VARIABLE)
+                .paymentMethod(PaymentMethod.DEBIT)
+                .paymentSource(derivePaymentSource(PaymentMethod.DEBIT))
+                .amount(amount)
+                .originalAmount(amount)
+                .description("Pagamento fatura cartao " + statementMonth)
+                .dueDate(paymentDate)
+                .endDate(null)
+                .recurring(false)
+                .installmentNumber(1)
+                .installmentCount(1)
+                .creditCardBillPayment(true)
+                .creditCardStatementMonth(statementMonth)
+                .build());
+        return map(paymentExpense);
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal totalBillPayments(YearMonth month) {
+        AppUser user = currentUserService.requireCurrentUser();
+        return expenseRepository.findAllByUserAndDueDateBetweenAndCreditCardBillPaymentTrueOrderByDueDateAsc(
+                        user,
+                        month.atDay(1),
+                        month.atEndOfMonth()
+                ).stream()
+                .map(Expense::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Transactional(readOnly = true)
+    public ExpenseResponse findCreditCardBillPayment(YearMonth statementMonth) {
+        AppUser user = currentUserService.requireCurrentUser();
+        return expenseRepository.findByUserAndCreditCardBillPaymentTrueAndCreditCardStatementMonth(user, statementMonth)
+                .map(this::map)
+                .orElse(null);
+    }
+
     private ExpenseResponse updateRecurringFixedExpense(Expense expense, ExpenseRequest request, Category category) {
         LocalDate effectiveStart = request.dueDate();
         LocalDate originalStart = expense.getDueDate();
@@ -177,6 +249,8 @@ public class ExpenseService {
             expense.setDescription(request.description().trim());
             expense.setDueDate(request.dueDate());
             expense.setRecurring(true);
+            expense.setCreditCardBillPayment(false);
+            expense.setCreditCardStatementMonth(null);
             return map(expenseRepository.save(expense));
         }
 
@@ -194,6 +268,8 @@ public class ExpenseService {
                 .recurring(true)
                 .installmentNumber(1)
                 .installmentCount(1)
+                .creditCardBillPayment(false)
+                .creditCardStatementMonth(null)
                 .build();
 
         expense.setEndDate(effectiveStart.minusDays(1));
@@ -234,6 +310,8 @@ public class ExpenseService {
                     .installmentNumber(i + 1)
                     .installmentCount(installmentCount)
                     .installmentGroup(group)
+                    .creditCardBillPayment(false)
+                    .creditCardStatementMonth(null)
                     .build());
             responses.add(map(expense));
         }
@@ -264,7 +342,7 @@ public class ExpenseService {
             if (request.type() == ExpenseType.VARIABLE) {
                 return categoryService.findOrCreateUncategorized(user);
             }
-            throw new IllegalArgumentException("Categoria obrigatÃ³ria para despesas fixas e parceladas.");
+            throw new IllegalArgumentException("Categoria obrigatoria para despesas fixas e parceladas.");
         }
 
         return categoryService.requireOwnedCategory(request.categoryId(), user);
@@ -272,8 +350,8 @@ public class ExpenseService {
 
     private String derivePaymentSource(PaymentMethod paymentMethod) {
         return switch (paymentMethod) {
-            case CREDIT -> "CrÃ©dito";
-            case DEBIT -> "DÃ©bito";
+            case CREDIT -> "Credito";
+            case DEBIT -> "Debito";
             case PIX -> "PIX";
             case CASH -> "Dinheiro";
         };

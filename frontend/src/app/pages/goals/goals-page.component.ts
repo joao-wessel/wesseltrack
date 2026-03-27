@@ -22,7 +22,7 @@ export class GoalsPageComponent implements AfterViewInit {
   readonly form = this.fb.nonNullable.group({
     reserveGoal: this.fb.control<number | null>(null, [Validators.required, Validators.min(0)]),
     creditLimit: this.fb.control<number | null>(null, [Validators.required, Validators.min(0)]),
-    creditCardDueDay: this.fb.control<number | null>(10, [Validators.required, Validators.min(1), Validators.max(31)])
+    creditCardClosingDay: this.fb.control<number | null>(10, [Validators.required, Validators.min(1), Validators.max(31)])
   });
 
   constructor() {
@@ -42,15 +42,15 @@ export class GoalsPageComponent implements AfterViewInit {
   save() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.toastService.error('Preencha corretamente a meta de reserva, o limite e o vencimento do cart\u00E3o.');
+      this.toastService.error('Preencha corretamente a meta de reserva, o limite e o fechamento da fatura.');
       return;
     }
 
     this.financeService.savePlanningSettings(this.form.getRawValue() as any).subscribe({
       next: () => {
-        this.toastService.success('Meta, limite e vencimento salvos com sucesso.');
+        this.toastService.success('Meta, limite e fechamento salvos com sucesso.');
       },
-      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar configura\u00E7\u00F5es do cart\u00E3o.')
+      error: (error: any) => this.toastService.error(error?.error?.error ?? 'Falha ao salvar configuracoes do cartao.')
     });
   }
 
