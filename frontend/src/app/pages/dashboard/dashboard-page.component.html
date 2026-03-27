@@ -80,6 +80,8 @@
             <div class="statement-period-copy">
               <small>Per&iacute;odo da fatura atual</small>
               <strong>{{ data.currentStatement.periodStart | date:'dd/MM' }} - {{ data.currentStatement.periodEnd | date:'dd/MM' }}</strong>
+              <small>{{ creditUsageDelta() >= 0 ? 'Folga no teto' : 'Acima do teto' }}</small>
+              <strong>{{ (creditUsageDelta() >= 0 ? creditUsageDelta() : creditUsageDelta() * -1) | currency:'BRL':'symbol':'1.2-2' }}</strong>
             </div>
             @if (data.dueStatement.paid) {
               <div class="bill-payment-status paid">
@@ -100,17 +102,6 @@
             <div class="indicator-progress-labels">
               <small>Comparativo com o teto recomendado para a fatura em forma&ccedil;&atilde;o</small>
               <strong>{{ data.maxCreditCardBill | currency:'BRL':'symbol':'1.2-2' }}</strong>
-            </div>
-          </div>
-
-          <div class="indicator-metrics">
-            <div class="metric-card">
-              <small>Compras no cr&eacute;dito do m&ecirc;s</small>
-              <strong>{{ data.creditPurchases | currency:'BRL':'symbol':'1.2-2' }}</strong>
-            </div>
-            <div class="metric-card">
-              <small>{{ creditUsageDelta() >= 0 ? 'Folga no teto' : 'Acima do teto' }}</small>
-              <strong>{{ (creditUsageDelta() >= 0 ? creditUsageDelta() : creditUsageDelta() * -1) | currency:'BRL':'symbol':'1.2-2' }}</strong>
             </div>
           </div>
         </article>

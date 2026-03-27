@@ -108,30 +108,12 @@ button { border: 0; background: #0f172a; color: #fff; cursor: pointer; font-weig
 .bill-payment-status.paid strong {
   color: #0f766e;
 }
-.indicator-metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 0.75rem;
-  min-width: 0;
-}
-.metric-card {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.9rem;
-  border-radius: 1rem;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  border: 1px solid #e2e8f0;
-}
-.metric-card strong {
-  font-size: 1rem;
-}
 .action-panel small { color: #64748b; display: block; }
 @media (max-width: 1100px) {
   .summary-grid, .content-grid, .pie-layout { grid-template-columns: 1fr; }
   .left-stack { grid-template-rows: auto; height: auto; }
   .left-stack > .panel,
   .payments-panel { height: auto; }
-  .indicator-metrics { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
   .header-panel, .action-panel, .legend-row { grid-template-columns: 1fr; display: grid; }
